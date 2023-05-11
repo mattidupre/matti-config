@@ -7,6 +7,8 @@ const packageEntryFile = 'tsconfig-all.json';
 export const bundleTypeScript = (
   packageConfig: PackageConfigParsed,
 ): Array<BundledCode> => {
+  console.log('bundleTypescript', packageConfig.environments);
+
   const bundles: Array<BundledCode> = packageConfig.environments.map(
     (environment) => ({
       type: 'configureTypeScript',

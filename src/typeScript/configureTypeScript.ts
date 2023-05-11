@@ -56,6 +56,14 @@ const pathsByEnvironment: Record<Environment, [string, null | string]> = {
   stories: ['./src', null],
 };
 
+const globsByEnvironment: Record<Environment, [Array<string>, Array<string>]> =
+  {
+    config: [['./*'], []],
+    dist: [['./src/**/*'], ['./src/**/*.test.*', './src/**/*.stories.*']],
+    test: [['./src/**/*'], ['./src/**/*.stories.*']],
+    stories: [['./src/**/*'], ['./src/**/*.test.*']],
+  };
+
 export const configureTypeScript = (
   {
     packageConfig: { target },
@@ -65,7 +73,11 @@ export const configureTypeScript = (
 ): TSConfig => {
   const baseDir = path.relative(packageConfigDir, packageDir);
   const [srcDir, distDir] = pathsByEnvironment[environment];
-  const [include, exclude] = buildGlobsByEnvironment({ baseDir }, environment);
+
+  const [include, exclude] = globsByEnvironment[environment].map((globs) =>
+    globs.map((glob) => path.join(baseDir, glob)),
+  );
+
   return {
     compilerOptions: {
       ...baseOptions,
