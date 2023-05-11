@@ -1,0 +1,28 @@
+{
+  "name": "matti-config",
+  "version": "0.0.0",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": "./dist/cli.js",
+  "scripts": {
+    "build": "rm -rf dist && yarn run -T tsc --project tsconfig.json --declaration",
+    "watch": "yarn build --watch"
+  },
+  "dependencies": {
+    "@storybook/builder-vite": "future",
+    "@storybook/react": "future",
+    "@storybook/react-vite": "future",
+    "exec-sh": "^0.4.0",
+    "fast-glob": "^3.2.12",
+    "jest-extended": "^3.2.0",
+    "picomatch": "^2.3.1",
+    "rimraf": "^3.0.2",
+    "storybook": "future",
+    "ts-node": "^10.9.1",
+    "tslib": "^2.4.1",
+    "typescript": "4.8.4",
+    "vite": "^4.3.5",
+    "vite-plugin-dts": "1.6.6",
+    "vitest": "^0.24.3"
+  }
+}
