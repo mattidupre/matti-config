@@ -40,8 +40,6 @@ export default async () => {
   const allBundles: Array<BundledCode> = [];
   const allTSConfigPaths: Array<string> = [];
 
-  console.log(allPackages);
-
   // Build TypeScript bundles first.
   allBundles.push(
     ...allPackages
