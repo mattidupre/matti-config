@@ -40,6 +40,7 @@ export default async () => {
     });
     await server.listen();
     server.printUrls();
+    return;
   } else {
     await viteBuild(config);
   }

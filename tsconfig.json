@@ -3,5 +3,9 @@
     "esModuleInterop": true,
     "outDir": "./dist"
   },
-  "include": ["./src/**/*.ts"]
+  "include": ["./src/**/*.ts"],
+  "files": [
+    "node_modules/vitest/index.d.cts",
+    "node_modules/jest-extended/types/index.d.ts"
+  ]
 }

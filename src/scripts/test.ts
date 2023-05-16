@@ -8,9 +8,10 @@ import { buildPackageInfo } from '../lib/buildPackageInfo';
 import { getRootInfo } from '../lib/getRootInfo';
 
 export default async () => {
-  await configure();
   const { rootDir } = await getRootInfo();
   const packageDir = process.cwd();
+
+  const testPaths = process.argv.slice(3).filter((a) => !a.startsWith('-'));
 
   const { packageConfigDir, configDir } = buildPackageInfo({
     rootDir,
@@ -23,7 +24,7 @@ export default async () => {
   execSh(
     `yarn run vitest ${
       watch ? 'watch' : 'run'
-    } --config ${vitestConfigPath} --dir ${packageDir}`,
+    } --config ${vitestConfigPath} --dir ${packageDir} ${testPaths.join(' ')}`,
     { cwd: configDir },
   );
 };

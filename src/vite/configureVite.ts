@@ -2,6 +2,8 @@ import path from 'node:path';
 import { defineConfig } from 'vite';
 import dts from 'vite-plugin-dts';
 import react from '@vitejs/plugin-react';
+import rollupPluginNode from 'rollup-plugin-node';
+import { VitePluginNode } from 'vite-plugin-node';
 import fs from 'node:fs';
 import { shimTSConfig } from './lib/pluginShimTSConfig';
 import type {
@@ -12,6 +14,7 @@ import type {
 } from '../types';
 
 // TODO: See https://www.npmjs.com/package/vite-node
+// TODO: See https://www.npmjs.com/package/vite-plugin-node
 
 const buildOptionsByTarget: Record<PackageTarget, ViteConfig['build']> = {
   browser: { target: 'esnext' },
@@ -37,6 +40,7 @@ export const configureVite = async ({
 }: PackageConfigParsed): Promise<ViteConfig> => {
   const isLibrary = packageType === 'library';
   const isReact = target === 'react';
+  const isNode = target === 'node';
   const srcRootDir = path.join(packageDir, 'src');
 
   return defineConfig({
@@ -67,6 +71,15 @@ export const configureVite = async ({
           ]
         : []),
       ...(isReact ? [react()] : []),
+      ...(isNode
+        ? [
+            VitePluginNode({
+              adapter: 'express',
+              appPath: './src/index.ts',
+              tsCompiler: 'esbuild',
+            }),
+          ]
+        : []),
     ],
     esbuild: {
       tsconfigRaw: await fs.promises.readFile(
