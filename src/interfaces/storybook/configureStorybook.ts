@@ -1,5 +1,5 @@
 import path from 'node:path';
-import type { PackageConfigParsed, StorybookConfig } from '../types';
+import type { PackageConfigParsed, StorybookConfig } from '../../types';
 import { mergeConfig } from 'vite';
 import { configureVite } from '../vite/configureVite';
 

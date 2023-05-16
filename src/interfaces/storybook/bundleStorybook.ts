@@ -1,4 +1,4 @@
-import type { PackageConfigParsed, BundledCode } from '../types';
+import type { PackageConfigParsed, BundledCode } from '../../types';
 import path from 'node:path';
 
 export const bundleStorybook = (

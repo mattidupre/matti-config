@@ -6,11 +6,17 @@ import fs from 'node:fs';
 import { getRootInfo } from '../lib/getRootInfo';
 import { withPackagePaths } from '../lib/withPackagePaths';
 import { buildPackageConfig } from '../lib/buildPackageConfig';
-import { bundleTypeScript, bundleTypeScriptEntry } from '../typeScript';
-import { bundleESLint, bundleESLintEntry } from '../esLint/bundleESLint';
-import { bundleVite } from '../vite/bundleVite';
-import { bundleVitest } from '../vitest/bundleVitest';
-import { bundleStorybook } from '../storybook/bundleStorybook';
+import {
+  bundleTypeScript,
+  bundleTypeScriptEntry,
+} from '../interfaces/typeScript';
+import {
+  bundleESLint,
+  bundleESLintEntry,
+} from '../interfaces/esLint/bundleESLint';
+import { bundleVite } from '../interfaces/vite/bundleVite';
+import { bundleVitest } from '../interfaces/vitest/bundleVitest';
+import { bundleStorybook } from '../interfaces/storybook/bundleStorybook';
 import { buildPackageInfo } from '../lib/buildPackageInfo';
 
 import type { PackageConfigParsed, BundledCode } from '../types';

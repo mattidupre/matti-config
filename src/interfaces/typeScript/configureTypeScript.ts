@@ -1,12 +1,12 @@
 import path from 'node:path';
-import { pathDotPrefix } from '../utils/pathDotPrefix';
-import { buildGlobsByEnvironment } from '../lib/buildGlobsByEnvironment';
+import { pathDotPrefix } from '../../utils/pathDotPrefix';
+import { buildGlobsByEnvironment } from '../../lib/buildGlobsByEnvironment';
 import type {
   PackageConfigParsed,
   Environment,
   PackageTarget,
   TSConfig,
-} from '../types';
+} from '../../types';
 
 // https://github.com/dominikg/tsconfck
 

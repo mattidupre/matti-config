@@ -11,7 +11,7 @@ import type {
   PackageTarget,
   PackageType,
   ViteConfig,
-} from '../types';
+} from '../../types';
 
 // TODO: See https://www.npmjs.com/package/vite-node
 // TODO: See https://www.npmjs.com/package/vite-plugin-node

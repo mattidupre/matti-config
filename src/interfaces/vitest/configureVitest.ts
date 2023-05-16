@@ -2,7 +2,7 @@ import { mergeConfig } from 'vite';
 import { defineConfig } from 'vitest/config';
 import path from 'node:path';
 
-import type { PackageConfigParsed, VitestConfig } from '../types';
+import type { PackageConfigParsed, VitestConfig } from '../../types';
 import { configureVite } from '../vite/configureVite';
 
 export const configureVitest = async (

@@ -1,6 +1,10 @@
-import type { PackageConfigParsed, Environment, ESLintConfig } from '../types';
-import { buildGlobsByEnvironment } from '../lib/buildGlobsByEnvironment';
-import { pathDotPrefix } from '../utils/pathDotPrefix';
+import type {
+  PackageConfigParsed,
+  Environment,
+  ESLintConfig,
+} from '../../types';
+import { buildGlobsByEnvironment } from '../../lib/buildGlobsByEnvironment';
+import { pathDotPrefix } from '../../utils/pathDotPrefix';
 import path from 'node:path';
 
 // TODO: Prevent index.tsx.

@@ -1,5 +1,5 @@
-import type { PackageConfigParsed, BundledCode } from '../types';
-import { pathDotPrefix } from '../utils/pathDotPrefix';
+import type { PackageConfigParsed, BundledCode } from '../../types';
+import { pathDotPrefix } from '../../utils/pathDotPrefix';
 import path from 'node:path';
 import { configureESLint } from './configureESLint';
 

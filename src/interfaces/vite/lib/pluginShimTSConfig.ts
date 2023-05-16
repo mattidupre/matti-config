@@ -1,8 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import type { Plugin } from 'vite';
-import { fileExists } from '../../utils/fileExists';
-import { pathDotPrefix } from '../../utils/pathDotPrefix';
+import { fileExists } from '../../../utils/fileExists';
+import { pathDotPrefix } from '../../../utils/pathDotPrefix';
 
 // https://github.com/vitejs/vite/issues/10531
 
