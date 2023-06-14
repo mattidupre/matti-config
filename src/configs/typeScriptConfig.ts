@@ -1,16 +1,16 @@
+import { pathDotPrefix } from '../utils/pathDotPrefix';
 import path from 'node:path';
-import { pathDotPrefix } from '../../utils/pathDotPrefix';
-import { buildGlobsByEnvironment } from '../../lib/buildGlobsByEnvironment';
-import type {
-  PackageConfigParsed,
-  Environment,
-  PackageTarget,
-  TSConfig,
-} from '../../types';
+import type { Environment, PackageTarget, PackageInfo } from '../types';
+
+type TSConfig = {
+  compilerOptions?: Record<string, unknown>;
+  include?: Array<string>;
+  exclude?: Array<string>;
+};
 
 // https://github.com/dominikg/tsconfck
 
-const baseOptions: TSConfig['compilerOptions'] = {
+const baseCompilerOptions: TSConfig['compilerOptions'] = {
   composite: true,
   forceConsistentCasingInFileNames: true,
 
@@ -22,9 +22,7 @@ const baseOptions: TSConfig['compilerOptions'] = {
   moduleResolution: 'node',
   resolveJsonModule: true,
   // isolatedModules: false,
-
   // skipLibCheck: true, // ??
-
   allowJs: false,
 };
 
@@ -64,14 +62,11 @@ const globsByEnvironment: Record<Environment, [Array<string>, Array<string>]> =
     stories: [['./src/**/*'], ['./src/**/*.test.*']],
   };
 
-export const configureTypeScript = (
-  {
-    packageConfig: { target },
-    packageInfo: { packageConfigDir, packageDir, rootDir, configDir },
-  }: PackageConfigParsed,
+export default (
+  { target, rootDir, cacheDir, configDir, packageDir }: PackageInfo,
   environment: Environment,
-): TSConfig => {
-  const baseDir = path.relative(packageConfigDir, packageDir);
+) => {
+  const baseDir = path.relative(cacheDir, packageDir);
   const [srcDir, distDir] = pathsByEnvironment[environment];
 
   const [include, exclude] = globsByEnvironment[environment].map((globs) =>
@@ -80,7 +75,7 @@ export const configureTypeScript = (
 
   return {
     compilerOptions: {
-      ...baseOptions,
+      ...baseCompilerOptions,
       ...optionsByEnvironment[environment],
       ...optionsByTarget[target],
       baseUrl: baseDir,
@@ -89,16 +84,13 @@ export const configureTypeScript = (
       paths: { '~/*': [pathDotPrefix(path.join(srcDir, '*'))] },
       typeRoots: [
         pathDotPrefix(
-          path.join(
-            path.relative(packageConfigDir, packageDir),
-            'node_modules',
-          ),
+          path.join(path.relative(cacheDir, packageDir), 'node_modules'),
         ),
         pathDotPrefix(
-          path.join(path.relative(packageConfigDir, rootDir), 'node_modules'),
+          path.join(path.relative(cacheDir, rootDir), 'node_modules'),
         ),
         pathDotPrefix(
-          path.join(path.relative(packageConfigDir, configDir), 'node_modules'),
+          path.join(path.relative(cacheDir, configDir), 'node_modules'),
         ),
       ],
       types: typesByEnvironment[environment],

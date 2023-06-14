@@ -1,29 +1,39 @@
-export type Environment = 'test' | 'dist' | 'stories' | 'config';
+import {
+  ENVIRONMENTS,
+  PACKAGE_TARGETS,
+  PACKAGE_TYPES,
+  PROGRAMS,
+} from './constants';
 
-export type PackageTarget = 'browser' | 'react' | 'node' | 'universal';
+export type Environment = (typeof ENVIRONMENTS)[number];
 
-export type PackageType = 'app' | 'library';
+export type PackageTarget = (typeof PACKAGE_TARGETS)[number];
 
-export type PackageConfig = {
+export type PackageType = (typeof PACKAGE_TYPES)[number];
+
+export type PackageConfigFile = {
   target: PackageTarget;
   type: PackageType;
 };
 
-export type PackageInfo = {
+export type RepoInfo = {
+  cwd: string;
   rootDir: string;
-  sourceDir: string;
-  packageDir: string;
+  configsDir: string;
   configDir: string;
-  configName: string;
-  packageConfigDir: string;
-  packageConfigPath: string;
-  packageConfigPathBundled: string;
+  isMonorepo: boolean;
 };
 
-export type PackageConfigParsed = {
-  packageConfig: PackageConfig;
-  packageInfo: PackageInfo;
-  environments: Array<Environment>;
+export type PackageInfo = RepoInfo & {
+  name: string;
+  cacheDir: string;
+  packageDir: string;
+  sourceDir: string;
+  distDir: string;
+  packageType: string;
+  environments: ReadonlyArray<Environment>;
+  target: PackageTarget;
+  isPackageAtRoot: boolean;
 };
 
 export type ConfigType =
@@ -33,32 +43,15 @@ export type ConfigType =
   | 'configureVitest'
   | 'configureStorybook';
 
-export type BundledCode = {
-  type: ConfigType;
-  isIndex: boolean;
-  path: string;
-  code: string;
+export type ProgramType = keyof typeof PROGRAMS;
+
+export type ProgramInfo = {
+  program: ProgramType;
+  isDevMode: boolean;
+  isExecuteRoot: boolean;
+  isExecuteAll: boolean;
 };
 
-export type CLIArgs = {
-  program: 'configure' | 'build' | 'test' | 'storybook';
-  watch: boolean;
-};
-
-export type KitConfig = PackageConfig;
+export type KitConfig = PackageConfigFile;
 
 export type PackageJson = { name: string; workspaces?: string | string[] };
-
-export type TSConfig = {
-  compilerOptions?: Record<string, unknown>;
-  include?: Array<string>;
-  exclude?: Array<string>;
-};
-
-export type ESLintConfig = Record<string, unknown>;
-
-export { UserConfig as ViteConfig } from 'vite';
-
-export { UserConfig as VitestConfig } from 'vitest';
-
-export type { StorybookViteConfig as StorybookConfig } from '@storybook/builder-vite';

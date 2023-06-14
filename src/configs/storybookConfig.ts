@@ -1,16 +1,13 @@
 import path from 'node:path';
-import type { PackageConfigParsed, StorybookConfig } from '../../types';
+import type { PackageInfo } from '../types';
 import { mergeConfig } from 'vite';
-import { configureVite } from '../vite/configureVite';
+import viteConfig from './viteConfig';
+import type { StorybookViteConfig as StorybookConfig } from '@storybook/builder-vite';
 
-export const configureStorybook = (
-  packageConfig: PackageConfigParsed,
-): StorybookConfig => {
-  const {
-    packageInfo: { packageDir },
-  } = packageConfig;
+export default (packageInfo: PackageInfo): StorybookConfig => {
+  const { packageDir } = packageInfo;
 
-  const viteConfigPromise = configureVite(packageConfig).then((config) => ({
+  const viteConfigPromise = viteConfig(packageInfo).then((config) => ({
     ...config,
     plugins: config.plugins
       .flat()

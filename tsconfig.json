@@ -1,7 +1,13 @@
 {
   "compilerOptions": {
+    "strict": false, // TODO: Enable"
+    "downlevelIteration": true,
     "esModuleInterop": true,
-    "outDir": "./dist"
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "outDir": "./dist",
+    "target": "ES5",
+    "sourceMap": true
   },
   "include": ["./src/**/*.ts"],
   "files": [

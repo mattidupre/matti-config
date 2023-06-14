@@ -2,16 +2,10 @@ import path from 'node:path';
 import { defineConfig } from 'vite';
 import dts from 'vite-plugin-dts';
 import react from '@vitejs/plugin-react';
-import rollupPluginNode from 'rollup-plugin-node';
-import { VitePluginNode } from 'vite-plugin-node';
 import fs from 'node:fs';
-import { shimTSConfig } from './lib/pluginShimTSConfig';
-import type {
-  PackageConfigParsed,
-  PackageTarget,
-  PackageType,
-  ViteConfig,
-} from '../../types';
+import type { PackageInfo, PackageTarget, PackageType } from '../types';
+import type { UserConfig as ViteConfig } from 'vite';
+import { SOURCE_DIRNAME, DIST_DIRNAME } from '../constants';
 
 // TODO: See https://www.npmjs.com/package/vite-node
 // TODO: See https://www.npmjs.com/package/vite-plugin-node
@@ -27,17 +21,20 @@ const buildOptionsByPackageType: Record<PackageType, ViteConfig['build']> = {
   app: {},
   library: {
     lib: {
-      entry: './src/index.ts',
+      entry: `./${SOURCE_DIRNAME}/index.ts`,
       fileName: 'index',
       formats: ['es', 'cjs'],
     },
   },
 };
 
-export const configureVite = async ({
-  packageConfig: { target, type: packageType },
-  packageInfo: { packageDir, rootDir, packageConfigDir },
-}: PackageConfigParsed): Promise<ViteConfig> => {
+export default async ({
+  target,
+  rootDir,
+  cacheDir,
+  packageDir,
+  packageType,
+}: PackageInfo): Promise<ViteConfig> => {
   const isLibrary = packageType === 'library';
   const isReact = target === 'react';
   const isNode = target === 'node';
@@ -48,38 +45,30 @@ export const configureVite = async ({
     resolve: { alias: { '~': srcRootDir } },
     build: {
       sourcemap: true,
-      outDir: 'dist',
+      outDir: DIST_DIRNAME,
       emptyOutDir: true,
       ...buildOptionsByTarget[target],
       ...buildOptionsByPackageType[packageType],
     },
     plugins: [
-      shimTSConfig({
-        sourceConfigPath: path.join(packageConfigDir, 'tsconfig-all.json'),
-        tempConfigPath: path.join(packageDir, 'tsconfig.json'),
-        enabled: true,
-      }),
       ...(isLibrary
         ? [
             dts({
               insertTypesEntry: true,
-              tsConfigFilePath: path.join(
-                packageConfigDir,
-                'tsconfig-all.json',
-              ),
+              tsConfigFilePath: path.join(cacheDir, 'tsconfig-package.json'),
             }),
           ]
         : []),
       ...(isReact ? [react()] : []),
-      ...(isNode
-        ? [
-            VitePluginNode({
-              adapter: 'express',
-              appPath: './src/index.ts',
-              tsCompiler: 'esbuild',
-            }),
-          ]
-        : []),
+      // ...(isNode
+      //   ? [
+      //       VitePluginNode({
+      //         adapter: 'express',
+      //         appPath: `./${SOURCE_DIRNAME}/index.ts`,
+      //         tsCompiler: 'esbuild',
+      //       }),
+      //     ]
+      //   : []),
     ],
     esbuild: {
       tsconfigRaw: await fs.promises.readFile(

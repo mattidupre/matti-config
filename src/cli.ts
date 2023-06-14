@@ -1,24 +1,45 @@
 #!/usr/bin/env node
 
-import type { CLIArgs } from './types';
-import { buildArgs } from './lib/buildArgs';
-import path from 'node:path';
+import type { ProgramType } from './types';
+import { Program } from './lib/Program';
+import { pick } from 'lodash';
+import yargs from 'yargs';
+import type { ProgramInfo } from './types';
+import { PROGRAMS, PROGRAMS_OPTIONS } from './constants';
 
-const validPrograms: Array<CLIArgs['program']> = [
-  'configure',
-  'build',
-  'test',
-  'storybook',
-];
+const getProgramInfo = (): ProgramInfo => {
+  let result = yargs(process.argv.slice(2))
+    .strict()
+    .usage('Usage: $0 <command> [options]');
 
-(async () => {
-  const { program } = buildArgs();
-  if (!validPrograms.includes(program)) {
-    throw new Error(`Invalid program "${program}".`);
-  }
+  Object.entries(PROGRAMS).forEach(
+    ([key, { description, acceptedOptions }]) => {
+      result = result.command(
+        key,
+        description,
+        pick(PROGRAMS_OPTIONS, acceptedOptions),
+      );
+    },
+  );
 
-  const scriptPath = path.join(__dirname, 'scripts', `${program}`);
+  const {
+    _: [program],
+    dev: isDevMode,
+    root: isExecuteRoot,
+    all: isExecuteAll,
+  } = result.argv as unknown as {
+    _: [ProgramType];
+    dev: boolean;
+    all: boolean;
+    root: boolean;
+  };
 
-  const { default: script } = await import(scriptPath);
-  await script();
-})();
+  return {
+    program,
+    isDevMode,
+    isExecuteRoot,
+    isExecuteAll,
+  };
+};
+
+(async () => Program.import(getProgramInfo()))();

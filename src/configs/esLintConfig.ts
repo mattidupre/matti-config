@@ -1,14 +1,29 @@
-import type {
-  PackageConfigParsed,
-  Environment,
-  ESLintConfig,
-} from '../../types';
-import { buildGlobsByEnvironment } from '../../lib/buildGlobsByEnvironment';
-import { pathDotPrefix } from '../../utils/pathDotPrefix';
+import type { PackageInfo, Environment } from '../types';
+import { pathDotPrefix } from '../utils/pathDotPrefix';
 import path from 'node:path';
+import { SOURCE_DIRNAME } from '../constants';
 
-// TODO: Prevent index.tsx.
+type ESLintConfig = Record<string, unknown>; // TODO
+
+// TODO: buildGlobsByEnvironment.
+
+// TODO: Rule to prevent creation of index.tsx files.
+
 // https://github.com/typescript-eslint/typescript-eslint/issues/2094
+
+const globsByEnvironment: Record<Environment, [Array<string>, Array<string>]> =
+  {
+    config: [['./*.ts?(x)'], []],
+    dist: [
+      [`./${SOURCE_DIRNAME}/**/*.ts?(x)`],
+      [
+        `./${SOURCE_DIRNAME}/**/*.test.ts?(x)`,
+        `./${SOURCE_DIRNAME}/**/*.stories.ts?(x)`,
+      ],
+    ],
+    test: [[`./${SOURCE_DIRNAME}/**/*.test.ts?(x)`], []],
+    stories: [[`./${SOURCE_DIRNAME}/**/*.stories.ts?(x)`], []],
+  };
 
 const baseConfig = {
   plugins: ['@typescript-eslint', 'filenames', 'import'],
@@ -52,20 +67,15 @@ const baseConfig = {
   },
 };
 
-export const configureESLint = (
-  {
-    packageConfig: { target },
-    packageInfo: { packageDir, rootDir },
-  }: PackageConfigParsed,
+export default (
+  { target, rootDir, packageDir }: PackageInfo,
   environment: Environment,
   tsConfigPaths: Array<string>,
 ): ESLintConfig => {
-  const [files, excludedFiles] = buildGlobsByEnvironment(
-    {
-      baseDir: path.relative(rootDir, packageDir),
-      extension: target === 'react' ? '.ts?(x)' : '.ts',
-    },
-    environment,
+  const [files, excludedFiles] = globsByEnvironment[environment].map((globs) =>
+    globs.map((glob) =>
+      pathDotPrefix(path.join(path.relative(rootDir, packageDir), glob)),
+    ),
   );
 
   const tsConfigProject = tsConfigPaths.map((configPath) =>
