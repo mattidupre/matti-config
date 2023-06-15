@@ -4,9 +4,11 @@ import { z } from 'zod';
 
 export const CONFIG_APP_NAME = 'matti-kit';
 
-export const CONFIG_APP_DIR = path.resolve(path.resolve(__dirname), '../dist');
+export const CONFIG_APP_ROOT_DIR = path.resolve(__dirname, '..');
 
-export const CONFIG_APP_CONFIGS_DIR = path.join(CONFIG_APP_DIR, 'configs');
+export const CONFIG_APP_DIST_DIR = path.join(CONFIG_APP_ROOT_DIR, 'dist');
+
+export const CONFIG_APP_CONFIGS_DIR = path.join(CONFIG_APP_DIST_DIR, 'configs');
 
 export const CONFIG_APP_CONFIGS_EXTNAME = '.js';
 
@@ -74,6 +76,11 @@ export const PROGRAMS: Record<
     scriptPath: path.join(__dirname, 'programs/Test'),
     acceptedOptions: ['dev'],
   },
+  lint: {
+    description: 'Lint the package.',
+    scriptPath: path.join(__dirname, 'programs/Lint'),
+    acceptedOptions: ['root'],
+  },
   clean: {
     description: 'Remove node_modules and configs.',
     scriptPath: path.join(__dirname, 'programs/Clean'),
@@ -137,7 +144,7 @@ export type RepoInfo = {
   cwd: string;
   rootDir: string;
   configsDir: string;
-  configDir: string;
+  configRootDir: string;
   isMonorepo: boolean;
 };
 

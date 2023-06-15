@@ -27,7 +27,7 @@ export default class Storybook extends Program {
 
     if (isDevMode) {
       return await this.scriptRunner.run('storybook dev', {
-        args: [...baseArgs, '--no-open'],
+        args: [...baseArgs, '--no-open', '--port', '3000'],
       });
     }
 

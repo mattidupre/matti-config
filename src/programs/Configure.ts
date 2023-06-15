@@ -6,6 +6,14 @@ import { pathDotPrefix } from '../utils/pathDotPrefix';
 import path from 'node:path';
 import { PackageInfo, RepoInfo } from '../entities';
 
+// TODO: .gitignore
+
+// TODO: Tell VS Code to use matti-config eslint
+// .vscode -> settings.json
+// {
+//   "eslint.nodePath": require.resolve("eslint")
+// }
+
 export default class Configure extends Program {
   public async run() {
     await this.withInfo({
@@ -44,6 +52,7 @@ export default class Configure extends Program {
         packagesInfoArr.map(({ cacheDir }) =>
           path.join(cacheDir, `.eslintrc-package.js`),
         ),
+        true,
       ),
     );
 
@@ -154,20 +163,31 @@ export default class Configure extends Program {
     };
   }
 
-  private static esLintEntry(baseDir: string, configPaths: Array<string>) {
+  private static esLintEntry(
+    baseDir: string,
+    configPaths: Array<string>,
+    root: boolean = false,
+  ) {
+    const childRequires = configPaths.map(
+      (configPath) =>
+        `...[].concat(require('${pathDotPrefix(
+          path.join(path.relative(baseDir, configPath)),
+        )}'))`,
+    );
+    if (root) {
+      return [
+        `module.exports = {`,
+        `  root: true,`,
+        `  overrides: [`,
+        ...childRequires.map((childRequire) => `    ${childRequire},`),
+        `  ],`,
+        `};`,
+      ];
+    }
     return [
-      `module.exports = {`,
-      `  root: true,`,
-      `  ignorePatterns: ['*.js'],`,
-      `  overrides: [`,
-      ...configPaths.map(
-        (configPath) =>
-          `    ...require('${pathDotPrefix(
-            path.join(path.relative(baseDir, configPath)),
-          )}'),`,
-      ),
-      `  ]`,
-      `};`,
+      `module.exports = [`,
+      ...childRequires.map((childRequire) => `  ${childRequire},`),
+      `];`,
     ];
   }
 }

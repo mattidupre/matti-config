@@ -64,7 +64,7 @@ const globsByEnvironment: Record<Environment, [Array<string>, Array<string>]> =
   };
 
 export default (
-  { target, rootDir, cacheDir, configDir, packageDir }: PackageInfo,
+  { target, rootDir, cacheDir, configRootDir, packageDir }: PackageInfo,
   environment: Environment,
 ) => {
   const baseDir = path.relative(cacheDir, packageDir);
@@ -96,7 +96,7 @@ export default (
           path.join(path.relative(cacheDir, rootDir), 'node_modules'),
         ),
         pathDotPrefix(
-          path.join(path.relative(cacheDir, configDir), 'node_modules'),
+          path.join(path.relative(cacheDir, configRootDir), 'node_modules'),
         ),
       ],
       types: typesByEnvironment[environment],

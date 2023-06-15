@@ -7,8 +7,9 @@ import { ScriptRunner } from './ScriptRunner';
 import {
   PROGRAMS,
   CONFIG_CACHE_DIRNAME,
+  CONFIG_APP_ROOT_DIR,
   CONFIG_APP_CONFIGS_DIR,
-  CONFIG_APP_DIR,
+  CONFIG_APP_DIST_DIR,
   SOURCE_DIRNAME,
   DIST_DIRNAME,
 } from '../entities';
@@ -31,7 +32,7 @@ export class Program {
     this.programName = programInfo.program;
     this.fileReader = new FileReader();
     this.fileWriter = new FileWriter();
-    this.scriptRunner = new ScriptRunner(CONFIG_APP_DIR);
+    this.scriptRunner = new ScriptRunner(CONFIG_APP_DIST_DIR);
     this.workspacesNavigator = new WorkspacesNavigator(this.cwd);
   }
 
@@ -57,7 +58,7 @@ export class Program {
     return {
       cwd: this.cwd,
       rootDir,
-      configDir: CONFIG_APP_DIR,
+      configRootDir: CONFIG_APP_ROOT_DIR,
       configsDir: CONFIG_APP_CONFIGS_DIR,
       isMonorepo,
     };

@@ -12,14 +12,14 @@ export class ScriptRunner {
     this.cwd = cwd;
   }
 
-  async run(script: string, { args = [] }: Options = {}) {
+  async run(script: string, { args = [], cwd }: Options = {}) {
     const command = ['npx', script]
       .concat(args.map((arg) => arg.toString()))
       .join(' ');
 
     try {
       await execSh.promise(command, {
-        cwd: this.cwd,
+        cwd: cwd ?? this.cwd,
       });
     } catch (err) {
       console.error(err);

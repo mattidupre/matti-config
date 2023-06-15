@@ -11,7 +11,9 @@ export default class Build extends Program {
     });
   }
 
-  public async buildPackage({
+  private async lintRoot() {}
+
+  private async buildPackage({
     cacheDir,
     packageDir,
     packageType,
