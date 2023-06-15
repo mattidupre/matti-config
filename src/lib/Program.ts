@@ -77,12 +77,12 @@ export class Program {
     const cacheDir = path.join(packageDir, CONFIG_CACHE_DIRNAME);
     const sourceDir = path.join(packageDir, SOURCE_DIRNAME);
     const distDir = path.join(packageDir, DIST_DIRNAME);
-    const isFrontend = ['browser', 'react'].includes(target);
+    const isPackageFrontend = ['browser', 'react'].includes(target);
     const environments: PackageInfo['environments'] = [
       'config',
       'dist',
       'test',
-      ...(isFrontend ? (['stories'] as const) : ([] as const)),
+      ...(isPackageFrontend ? (['stories'] as const) : ([] as const)),
     ];
 
     return {
@@ -98,6 +98,7 @@ export class Program {
       packageType,
       isPackageAtRoot,
       target,
+      isPackageFrontend,
       environments,
     };
   }

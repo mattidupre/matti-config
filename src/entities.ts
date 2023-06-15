@@ -158,5 +158,6 @@ export type PackageInfo = RepoInfo & {
   environments: ReadonlyArray<Environment>;
   target: PackageTarget;
   isPackageAtRoot: boolean;
+  isPackageFrontend: boolean;
   packageConfig: PackageConfig;
 };

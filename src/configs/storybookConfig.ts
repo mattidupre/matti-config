@@ -4,7 +4,6 @@ import type { PackageInfo } from '../entities';
 import { mergeConfig } from 'vite';
 import viteConfig from './viteConfig';
 import type { StorybookViteConfig as StorybookConfig } from '@storybook/builder-vite';
-import react from '@vitejs/plugin-react';
 
 export default (packageInfo: PackageInfo): StorybookConfig => {
   const { packageDir } = packageInfo;
@@ -28,8 +27,6 @@ export default (packageInfo: PackageInfo): StorybookConfig => {
     core: { builder: '@storybook/builder-vite' },
     framework: '@storybook/react-vite',
     stories: [path.join(packageDir, '**/*.stories.@(ts|tsx)')],
-    async viteFinal(config) {
-      return mergeConfig(config, await viteConfigPromise);
-    },
+    viteFinal: async (config) => mergeConfig(config, await viteConfigPromise),
   };
 };

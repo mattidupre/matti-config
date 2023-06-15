@@ -4,7 +4,7 @@ import dts from 'vite-plugin-dts';
 import react from '@vitejs/plugin-react';
 import fs from 'node:fs';
 import { RESOLVE_ALIASES } from '../entities';
-import { pathDotPrefix } from '../utils/pathDotPrefix';
+import { vanillaExtractPlugin } from '@vanilla-extract/vite-plugin';
 import type { PackageInfo, PackageTarget, PackageType } from '../entities';
 import type { UserConfig as ViteConfig } from 'vite';
 import { SOURCE_DIRNAME, DIST_DIRNAME } from '../entities';
@@ -36,11 +36,14 @@ export default async ({
   cacheDir,
   packageDir,
   packageType,
+  isPackageFrontend,
 }: PackageInfo): Promise<ViteConfig> => {
   const isLibrary = packageType === 'library';
   const isReact = target === 'react';
   const isNode = target === 'node';
   const srcRootDir = path.join(packageDir, 'src');
+
+  console.log('isPackageFrontend', isPackageFrontend);
 
   return defineConfig({
     root: packageDir,
@@ -69,6 +72,7 @@ export default async ({
           ]
         : []),
       ...(isReact ? [react()] : []),
+      ...(isPackageFrontend ? [vanillaExtractPlugin()] : []),
       // ...(isNode
       //   ? [
       //       VitePluginNode({
