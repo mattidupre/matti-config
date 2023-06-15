@@ -54,7 +54,7 @@ export default class Configure extends Program {
   }
 
   private async configurePackage(packageInfo: PackageInfo) {
-    const { environments, cacheDir, packageDir } = packageInfo;
+    const { environments, cacheDir, packageDir, packageConfig } = packageInfo;
 
     this.fileWriter.queueJsObject(
       path.join(cacheDir, 'package-info.js'),
@@ -136,11 +136,13 @@ export default class Configure extends Program {
       'vitestConfig',
     );
 
-    this.fileWriter.queueJsConfig(
-      path.join(cacheDir, '.storybook', 'main.js'),
-      'storybookConfig',
-      { basePath: cacheDir, exportObject: true },
-    );
+    if (packageConfig.storybook) {
+      this.fileWriter.queueJsConfig(
+        path.join(cacheDir, '.storybook', 'main.js'),
+        'storybookConfig',
+        { basePath: cacheDir, exportObject: true },
+      );
+    }
   }
 
   private static typeScriptEntry(baseDir: string, configPaths: Array<string>) {

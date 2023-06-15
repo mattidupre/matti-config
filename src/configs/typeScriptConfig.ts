@@ -85,7 +85,7 @@ export default (
       paths: Object.fromEntries(
         RESOLVE_ALIASES.map(([from, to]) => [
           from,
-          pathDotPrefix(path.join(srcDir, to)),
+          [pathDotPrefix(path.join(srcDir, to))],
         ]),
       ),
       typeRoots: [

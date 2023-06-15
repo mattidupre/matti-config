@@ -6843,29 +6843,6 @@ __metadata:
     vitest: ^0.32.0
     yargs: ^17.7.2
     zod: ^3.21.4
-  peerDependencies:
-    "@testing-library/react": ^14.0.0
-    "@testing-library/react-hooks": ^8.0.1
-    lodash: 4.17.21
-    react: 18.2.0
-    react-dom: 18.2.0
-    typescript: 4.9.3
-    utility-types: 3.10.0
-  peerDependenciesMeta:
-    "@testing-library/react":
-      optional: true
-    "@testing-library/react-hooks":
-      optional: true
-    lodash:
-      optional: true
-    react:
-      optional: true
-    react-dom:
-      optional: true
-    typescript:
-      optional: true
-    utility-types:
-      optional: true
   bin:
     matti-config: ./dist/cli.js
   languageName: unknown
