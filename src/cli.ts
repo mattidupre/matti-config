@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
-import type { ProgramType } from './types';
+import type { ProgramType } from './entities';
 import { Program } from './lib/Program';
 import { pick } from 'lodash';
 import yargs from 'yargs';
-import type { ProgramInfo } from './types';
-import { PROGRAMS, PROGRAMS_OPTIONS } from './constants';
+import type { ProgramInfo } from './entities';
+import { PROGRAMS, PROGRAMS_OPTIONS } from './entities';
 
 const getProgramInfo = (): ProgramInfo => {
   let result = yargs(process.argv.slice(2))

@@ -1,7 +1,7 @@
-import type { PackageInfo, Environment } from '../types';
+import type { PackageInfo, Environment } from '../entities';
 import { pathDotPrefix } from '../utils/pathDotPrefix';
 import path from 'node:path';
-import { SOURCE_DIRNAME } from '../constants';
+import { SOURCE_DIRNAME } from '../entities';
 
 type ESLintConfig = Record<string, unknown>; // TODO
 

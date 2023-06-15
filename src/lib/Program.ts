@@ -1,4 +1,4 @@
-import type { ProgramInfo, PackageInfo, RepoInfo } from '../types';
+import type { ProgramInfo, PackageInfo, RepoInfo } from '../entities';
 import path from 'node:path';
 import { WorkspacesNavigator } from '../utils/WorkspacesNavigator';
 import { FileReader } from './FileReader';
@@ -11,8 +11,7 @@ import {
   CONFIG_APP_DIR,
   SOURCE_DIRNAME,
   DIST_DIRNAME,
-  CONFIG_APP_CONFIGS_EXTNAME,
-} from '../constants';
+} from '../entities';
 import { Memoize } from 'typescript-memoize';
 
 export class Program {
@@ -65,7 +64,7 @@ export class Program {
   }
 
   public async getPackageInfo(packageDir: string): Promise<PackageInfo> {
-    const [repoInfo, isPackageAtRoot, { type: packageType, target }, { name }] =
+    const [repoInfo, isPackageAtRoot, packageConfig, { name }] =
       await Promise.all([
         this.getRepoInfo(),
         this.getIsAtRoot(packageDir),
@@ -73,6 +72,7 @@ export class Program {
         this.fileReader.readPackageJson(packageDir),
       ]);
     const { rootDir } = repoInfo;
+    const { type: packageType, target } = packageConfig;
     const cacheDir = path.join(packageDir, CONFIG_CACHE_DIRNAME);
     const sourceDir = path.join(packageDir, SOURCE_DIRNAME);
     const distDir = path.join(packageDir, DIST_DIRNAME);
@@ -93,6 +93,7 @@ export class Program {
       sourceDir,
       distDir,
       cacheDir,
+      packageConfig,
       packageType,
       isPackageAtRoot,
       target,

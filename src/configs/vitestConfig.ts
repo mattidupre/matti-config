@@ -1,7 +1,7 @@
 import { mergeConfig } from 'vite';
 import { defineConfig } from 'vitest/config';
 import type { UserConfig as VitestConfig } from 'vitest';
-import type { PackageInfo } from '../types';
+import type { PackageInfo } from '../entities';
 import viteConfig from './viteConfig';
 
 export default async (packageInfo: PackageInfo): Promise<VitestConfig> => {

@@ -1,4 +1,4 @@
-import { DEFAULT_CONFIG_COMMENT } from '../constants';
+import { DEFAULT_CONFIG_COMMENT } from '../entities';
 import path from 'node:path';
 import { isFunction } from 'lodash';
 import fs from 'node:fs/promises';

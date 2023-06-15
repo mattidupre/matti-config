@@ -1,6 +1,6 @@
-import type { PackageInfo } from '../types';
+import type { PackageInfo } from '../entities';
 import path from 'node:path';
-import { CONFIG_EXTNAME } from '../constants';
+import { CONFIG_EXTNAME } from '../entities';
 import { Program } from '../lib/Program';
 
 export default class Test extends Program {

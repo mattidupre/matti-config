@@ -1,6 +1,6 @@
 import { Program } from '../lib/Program';
 import path from 'node:path';
-import { PackageInfo, RepoInfo } from '../types';
+import { PackageInfo, RepoInfo } from '../entities';
 import rimraf from 'rimraf';
 
 export default class Clean extends Program {

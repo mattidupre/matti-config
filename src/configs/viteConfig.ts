@@ -3,9 +3,11 @@ import { defineConfig } from 'vite';
 import dts from 'vite-plugin-dts';
 import react from '@vitejs/plugin-react';
 import fs from 'node:fs';
-import type { PackageInfo, PackageTarget, PackageType } from '../types';
+import { RESOLVE_ALIASES } from '../entities';
+import { pathDotPrefix } from '../utils/pathDotPrefix';
+import type { PackageInfo, PackageTarget, PackageType } from '../entities';
 import type { UserConfig as ViteConfig } from 'vite';
-import { SOURCE_DIRNAME, DIST_DIRNAME } from '../constants';
+import { SOURCE_DIRNAME, DIST_DIRNAME } from '../entities';
 
 // TODO: See https://www.npmjs.com/package/vite-node
 // TODO: See https://www.npmjs.com/package/vite-plugin-node
@@ -42,7 +44,14 @@ export default async ({
 
   return defineConfig({
     root: packageDir,
-    resolve: { alias: { '~': srcRootDir } },
+    resolve: {
+      alias: Object.fromEntries(
+        RESOLVE_ALIASES.map(([from, to]) => [
+          path.dirname(from),
+          path.join(srcRootDir, path.dirname(to)),
+        ]),
+      ),
+    },
     build: {
       sourcemap: true,
       outDir: DIST_DIRNAME,

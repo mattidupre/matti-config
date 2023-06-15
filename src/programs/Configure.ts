@@ -4,7 +4,7 @@ import esLintConfig from '../configs/esLintConfig';
 import prettierConfig from '../configs/prettierConfig';
 import { pathDotPrefix } from '../utils/pathDotPrefix';
 import path from 'node:path';
-import { PackageInfo, RepoInfo } from '../types';
+import { PackageInfo, RepoInfo } from '../entities';
 
 export default class Configure extends Program {
   public async run() {

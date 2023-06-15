@@ -1,7 +1,7 @@
-import type { PackageInfo } from '../types';
+import type { PackageInfo } from '../entities';
 import path from 'node:path';
 import { pathDotPrefix } from '../utils/pathDotPrefix';
-import { CONFIG_EXTNAME } from '../constants';
+import { CONFIG_EXTNAME, STORYBOOK_DIRNAME } from '../entities';
 import { Program } from '../lib/Program';
 
 export default class Build extends Program {
@@ -11,11 +11,7 @@ export default class Build extends Program {
     });
   }
 
-  public async buildPackage(packageInfo: PackageInfo) {
-    await Promise.all([this.vite(packageInfo), this.storybook(packageInfo)]);
-  }
-
-  private async vite({
+  public async buildPackage({
     cacheDir,
     packageDir,
     packageType,
@@ -24,6 +20,7 @@ export default class Build extends Program {
     if (target === 'node') {
       return;
     }
+
     const { isDevMode } = this.programInfo;
 
     const viteConfigPath = path.join(cacheDir, `vite.config${CONFIG_EXTNAME}`);
@@ -50,30 +47,5 @@ export default class Build extends Program {
         pathDotPrefix(path.relative(this.scriptRunner.cwd, packageDir)),
       ],
     });
-  }
-
-  private async storybook({ cacheDir, packageType, target }: PackageInfo) {
-    if (target === 'node' || packageType !== 'library') {
-      return;
-    }
-
-    const storybookConfigDir = path.join(cacheDir, `.storybook`);
-
-    console.log('\n\n\n', 'RUNNING STORYBOOK', '\n\n\n');
-
-    await Promise.all([
-      this.scriptRunner.run('storybook dev', {
-        // TODO: build or dev?
-        args: [
-          '--config-dir',
-          pathDotPrefix(
-            path.relative(this.scriptRunner.cwd, storybookConfigDir),
-          ),
-          // '--port',
-          // '3000',
-          '--no-open',
-        ],
-      }),
-    ]);
   }
 }

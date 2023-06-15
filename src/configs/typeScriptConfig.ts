@@ -1,6 +1,7 @@
 import { pathDotPrefix } from '../utils/pathDotPrefix';
 import path from 'node:path';
-import type { Environment, PackageTarget, PackageInfo } from '../types';
+import { RESOLVE_ALIASES } from '../entities';
+import type { Environment, PackageTarget, PackageInfo } from '../entities';
 
 type TSConfig = {
   compilerOptions?: Record<string, unknown>;
@@ -81,7 +82,12 @@ export default (
       baseUrl: baseDir,
       rootDir: pathDotPrefix(path.join(baseDir, srcDir)),
       outDir: distDir ? pathDotPrefix(path.join(baseDir, distDir)) : undefined,
-      paths: { '~/*': [pathDotPrefix(path.join(srcDir, '*'))] },
+      paths: Object.fromEntries(
+        RESOLVE_ALIASES.map(([from, to]) => [
+          from,
+          pathDotPrefix(path.join(srcDir, to)),
+        ]),
+      ),
       typeRoots: [
         pathDotPrefix(
           path.join(path.relative(cacheDir, packageDir), 'node_modules'),

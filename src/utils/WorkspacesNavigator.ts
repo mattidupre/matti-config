@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { Transform, Readable } from 'node:stream';
 import fg from 'fast-glob';
-import type { PackageJson } from '../types';
+import type { PackageJson } from 'type-fest';
 import { Memoize } from 'typescript-memoize';
 import { readJson } from '../lib/readJson';
 import { stream } from 'event-iterator';
@@ -33,9 +33,7 @@ const generateParentPackageDirs = function* (initialDir: string) {
 const parseWorkspaces = (
   workspaces: PackageJson['workspaces'],
 ): undefined | Array<string> =>
-  ([] as Array<string>)
-    .concat(workspaces || [])
-    .map((w) => path.join(w, 'package.json'));
+  [].concat(workspaces || []).map((w) => path.join(w, 'package.json'));
 
 export class WorkspacesNavigator {
   private readonly cwd: string;
