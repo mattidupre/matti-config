@@ -11,18 +11,25 @@ export default class Storybook extends Program {
     });
   }
 
-  public async buildPackageStorybook({ cacheDir, packageConfig }: PackageInfo) {
+  public async buildPackageStorybook({
+    cacheDir,
+    configRootDir,
+    distDir,
+    packageDir,
+    packageConfig,
+  }: PackageInfo) {
     if (!packageConfig.storybook) {
       return;
     }
+    const cwd = configRootDir;
     const { isDevMode } = this.programInfo;
 
-    const storybookConfigDir = path.join(cacheDir, `.storybook`);
-
     const baseArgs = [
+      // '--type',
+      // 'REACT',
       '--disable-telemetry',
       '--config-dir',
-      pathDotPrefix(path.relative(this.scriptRunner.cwd, storybookConfigDir)),
+      path.join(cacheDir, `.storybook`),
     ];
 
     if (isDevMode) {
@@ -32,12 +39,13 @@ export default class Storybook extends Program {
     }
 
     return await this.scriptRunner.run('storybook build', {
+      cwd,
       args: [
         ...baseArgs,
         // Duplicate of vite config value.
         // Storybook seems to both require and ignore this value.
         '--output-dir',
-        STORYBOOK_DIRNAME,
+        path.join(packageDir, STORYBOOK_DIRNAME),
       ],
     });
   }

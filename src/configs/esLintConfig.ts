@@ -19,6 +19,7 @@ const baseConfig = {
     },
   ],
   rules: {
+    'arrow-body-style': 'off',
     'no-undef': 'off',
     'import/order': 'off',
     'import/prefer-default-export': 'off',

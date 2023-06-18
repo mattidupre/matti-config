@@ -5,6 +5,7 @@ import react from '@vitejs/plugin-react';
 import fs from 'node:fs';
 import { RESOLVE_ALIASES } from '../entities';
 import { vanillaExtractPlugin } from '@vanilla-extract/vite-plugin';
+import ViteYaml from '@modyfi/vite-plugin-yaml';
 import type { PackageInfo, PackageTarget, PackageType } from '../entities';
 import type { UserConfig as ViteConfig } from 'vite';
 import { SOURCE_DIRNAME, DIST_DIRNAME } from '../entities';
@@ -27,6 +28,9 @@ const buildOptionsByPackageType: Record<PackageType, ViteConfig['build']> = {
       fileName: 'index',
       formats: ['es', 'cjs'],
     },
+    rollupOptions: {
+      external: ['react'],
+    },
   },
 };
 
@@ -36,6 +40,7 @@ export default async ({
   cacheDir,
   packageDir,
   packageType,
+  configRootDir,
   isPackageFrontend,
 }: PackageInfo): Promise<ViteConfig> => {
   const isLibrary = packageType === 'library';
@@ -43,17 +48,24 @@ export default async ({
   const isNode = target === 'node';
   const srcRootDir = path.join(packageDir, 'src');
 
-  console.log('isPackageFrontend', isPackageFrontend);
+  const tsconfigRaw = await fs.promises.readFile(
+    path.join(rootDir, 'tsconfig.json'),
+    'utf-8',
+  );
 
   return defineConfig({
     root: packageDir,
     resolve: {
-      alias: Object.fromEntries(
-        RESOLVE_ALIASES.map(([from, to]) => [
-          path.dirname(from),
-          path.join(srcRootDir, path.dirname(to)),
-        ]),
-      ),
+      alias: {
+        ...Object.fromEntries(
+          RESOLVE_ALIASES.map(([from, to]) => [
+            path.dirname(from),
+            path.join(srcRootDir, path.dirname(to)),
+          ]),
+        ),
+        react: path.join(configRootDir, 'node_modules', 'react'),
+        'react-dom': path.join(configRootDir, 'node_modules', 'react-dom'),
+      },
     },
     build: {
       sourcemap: true,
@@ -63,6 +75,7 @@ export default async ({
       ...buildOptionsByPackageType[packageType],
     },
     plugins: [
+      ViteYaml(),
       ...(isLibrary
         ? [
             dts({
@@ -72,22 +85,17 @@ export default async ({
           ]
         : []),
       ...(isReact ? [react()] : []),
-      ...(isPackageFrontend ? [vanillaExtractPlugin()] : []),
-      // ...(isNode
-      //   ? [
-      //       VitePluginNode({
-      //         adapter: 'express',
-      //         appPath: `./${SOURCE_DIRNAME}/index.ts`,
-      //         tsCompiler: 'esbuild',
-      //       }),
-      //     ]
-      //   : []),
+      ...(isPackageFrontend
+        ? [
+            vanillaExtractPlugin({
+              esbuildOptions: {
+                // Vanilla Extract doesn't seem to like tsconfig project references.
+                tsconfig: path.join(cacheDir, 'tsconfig-dist.json'),
+              },
+            }),
+          ]
+        : []),
     ],
-    esbuild: {
-      tsconfigRaw: await fs.promises.readFile(
-        path.join(rootDir, 'tsconfig.json'),
-        'utf-8',
-      ),
-    },
+    // esbuild: { tsconfigRaw },
   }) as ViteConfig;
 };

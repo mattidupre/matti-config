@@ -61,17 +61,22 @@ export class Program {
       configRootDir: CONFIG_APP_ROOT_DIR,
       configsDir: CONFIG_APP_CONFIGS_DIR,
       isMonorepo,
+      rootJsExtension: '.js',
     };
   }
 
   public async getPackageInfo(packageDir: string): Promise<PackageInfo> {
-    const [repoInfo, isPackageAtRoot, packageConfig, { name }] =
-      await Promise.all([
-        this.getRepoInfo(),
-        this.getIsAtRoot(packageDir),
-        this.fileReader.readPackageConfig(packageDir),
-        this.fileReader.readPackageJson(packageDir),
-      ]);
+    const [
+      repoInfo,
+      isPackageAtRoot,
+      packageConfig,
+      { name, type: packageJsonType },
+    ] = await Promise.all([
+      this.getRepoInfo(),
+      this.getIsAtRoot(packageDir),
+      this.fileReader.readPackageConfig(packageDir),
+      this.fileReader.readPackageJson(packageDir),
+    ]);
     const { rootDir } = repoInfo;
     const { type: packageType, target } = packageConfig;
     const cacheDir = path.join(packageDir, CONFIG_CACHE_DIRNAME);
@@ -84,6 +89,7 @@ export class Program {
       'test',
       ...(isPackageFrontend ? (['stories'] as const) : ([] as const)),
     ];
+    const packageJsExtension = '.cjs';
 
     return {
       ...repoInfo,
@@ -100,6 +106,7 @@ export class Program {
       target,
       isPackageFrontend,
       environments,
+      packageJsExtension,
     };
   }
 

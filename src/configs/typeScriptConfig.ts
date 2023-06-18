@@ -2,37 +2,55 @@ import { pathDotPrefix } from '../utils/pathDotPrefix';
 import path from 'node:path';
 import { RESOLVE_ALIASES } from '../entities';
 import type { Environment, PackageTarget, PackageInfo } from '../entities';
-
-type TSConfig = {
-  compilerOptions?: Record<string, unknown>;
-  include?: Array<string>;
-  exclude?: Array<string>;
-};
+import { TsConfigJson } from 'type-fest';
 
 // https://github.com/dominikg/tsconfck
 
-const baseCompilerOptions: TSConfig['compilerOptions'] = {
+/*
+"target": "ESNext",
+"useDefineForClassFields": true,
+"lib": ["DOM", "DOM.Iterable", "ESNext"],
+"allowJs": false,
+"skipLibCheck": true,
+"esModuleInterop": false,
+"allowSyntheticDefaultImports": true,
+"strict": true,
+"forceConsistentCasingInFileNames": true,
+"module": "ESNext",
+"moduleResolution": "bundler",
+"resolveJsonModule": true,
+"isolatedModules": true,
+"noEmit": true,
+"jsx": "react-jsx"
+*/
+
+const baseCompilerOptions: TsConfigJson['compilerOptions'] = {
   composite: true,
   forceConsistentCasingInFileNames: true,
-
-  target: 'esnext',
-  lib: ['esnext', 'dom'],
-  module: 'esnext',
-  esModuleInterop: false,
+  target: 'ESNext',
+  lib: ['DOM', 'DOM.Iterable', 'ESNext'],
+  module: 'ESNext',
+  esModuleInterop: true,
+  useDefineForClassFields: true,
   allowSyntheticDefaultImports: true,
-  moduleResolution: 'node',
   resolveJsonModule: true,
-  // isolatedModules: false,
-  // skipLibCheck: true, // ??
+  // isolatedModules: true,
+  skipLibCheck: true,
   allowJs: false,
+  sourceMap: true,
 };
 
-const optionsByEnvironment: Record<Environment, TSConfig['compilerOptions']> = {
+const optionsByEnvironment: Record<
+  Environment,
+  TsConfigJson['compilerOptions']
+> = {
   config: { strict: true },
   dist: { strict: true },
   test: { strict: false },
   stories: { strict: false },
 };
+
+const baseTypes = ['@modyfi/vite-plugin-yaml/modules'];
 
 const typesByEnvironment: Record<Environment, Array<string>> = {
   config: [],
@@ -41,16 +59,33 @@ const typesByEnvironment: Record<Environment, Array<string>> = {
   stories: [],
 };
 
-const optionsByTarget: Record<PackageTarget, TSConfig['compilerOptions']> = {
-  browser: {},
-  react: { jsx: 'preserve' },
-  node: {},
-  universal: {},
+const typesByTarget: Record<PackageTarget, Array<string>> = {
+  browser: [],
+  react: ['@types/react'],
+  node: ['node'],
+  universal: [],
 };
+
+const optionsByTarget: Record<PackageTarget, TsConfigJson['compilerOptions']> =
+  {
+    browser: {
+      moduleResolution: 'NodeNext',
+    },
+    react: {
+      moduleResolution: 'NodeNext',
+      jsx: 'react-jsx',
+    },
+    node: {
+      moduleResolution: 'NodeNext',
+    },
+    universal: {
+      moduleResolution: 'NodeNext',
+    },
+  };
 
 const pathsByEnvironment: Record<Environment, [string, null | string]> = {
   config: ['.', null],
-  dist: ['./src', 'dist'],
+  dist: ['./src', './dist'],
   test: ['./src', null],
   stories: ['./src', null],
 };
@@ -82,12 +117,16 @@ export default (
       baseUrl: baseDir,
       rootDir: pathDotPrefix(path.join(baseDir, srcDir)),
       outDir: distDir ? pathDotPrefix(path.join(baseDir, distDir)) : undefined,
-      paths: Object.fromEntries(
-        RESOLVE_ALIASES.map(([from, to]) => [
-          from,
-          [pathDotPrefix(path.join(srcDir, to))],
-        ]),
-      ),
+      paths: {
+        ...Object.fromEntries(
+          RESOLVE_ALIASES.map(([from, to]) => [
+            from,
+            [pathDotPrefix(path.join(srcDir, to))],
+          ]),
+        ),
+        react: [path.join(configRootDir, 'node_modules', 'react')],
+        'react-dom': [path.join(configRootDir, 'node_modules', 'react-dom')],
+      },
       typeRoots: [
         pathDotPrefix(
           path.join(path.relative(cacheDir, packageDir), 'node_modules'),
@@ -99,7 +138,11 @@ export default (
           path.join(path.relative(cacheDir, configRootDir), 'node_modules'),
         ),
       ],
-      types: typesByEnvironment[environment],
+      types: [
+        ...baseTypes,
+        ...typesByEnvironment[environment],
+        ...typesByTarget[target],
+      ].map((t) => path.join(configRootDir, 'node_modules', t)),
     },
     include,
     exclude,

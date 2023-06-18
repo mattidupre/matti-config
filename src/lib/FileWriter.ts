@@ -26,6 +26,9 @@ type QueueFileOptions = {
   meta?: JsonObject;
 };
 
+const JS_EXTENSIONS = ['.js', '.mjs', '.cjs'];
+const JSON_EXTENSIONS = ['.json', '.jsonc'];
+
 export class FileWriter {
   private filesQueue: FilesQueue;
 
@@ -45,7 +48,7 @@ export class FileWriter {
     fileContent: FileContentArg<string | Array<string>>,
     fileOptions: QueueFileOptions = {},
   ) {
-    this.checkExtension('.js', filePath);
+    this.checkExtension(JS_EXTENSIONS, filePath);
     return this.queueFile(filePath, fileContent, fileOptions);
   }
 
@@ -54,7 +57,7 @@ export class FileWriter {
     fileContent: FileContentArg<JsonValue>,
     fileOptions: QueueFileOptions = {},
   ) {
-    this.checkExtension('.js', filePath);
+    this.checkExtension(JS_EXTENSIONS, filePath);
     return this.queueFile(
       filePath,
       fileContent,
@@ -73,11 +76,12 @@ export class FileWriter {
   ) {
     const { basePath = path.dirname(filePath), exportObject = false } =
       fileOptions;
-    this.checkExtension('.js', filePath);
+    this.checkExtension(JS_EXTENSIONS, filePath);
     const packageInfoPath = pathDotPrefix(
       path.join(
         path.relative(path.dirname(filePath), basePath),
-        'package-info',
+        // Assume that the extension (i.e., JS, CJS, MJS) will be the same.
+        `package-info${path.extname(filePath)}`,
       ),
     );
     return this.queueFile(filePath, fileContent, fileOptions, (configName) => [
@@ -99,7 +103,7 @@ export class FileWriter {
       // Default remove comments if not jsonc file.
       comments: fileOptions.comments ?? !filePath.endsWith('.json'),
     };
-    this.checkExtension(['.json', '.jsonc'], filePath);
+    this.checkExtension(JSON_EXTENSIONS, filePath);
     return this.queueFile(filePath, fileContent, parsedFileOptions, (content) =>
       JSON.stringify(content, null, 2),
     );
@@ -176,17 +180,10 @@ export class FileWriter {
     }
     const parsedComments = this.toContentArray(comments);
     const extName = path.extname(filePath);
-    switch (extName) {
-      default:
-        return [];
-      case '.json':
-      case '.jsonc':
-      case '.js':
-      case '.ts':
-      case '.jsx':
-      case '.tsx':
-        return parsedComments.map((c) => `// ${c}`);
+    if ([...JS_EXTENSIONS, ...JSON_EXTENSIONS].includes(extName)) {
+      return parsedComments.map((c) => `// ${c}`);
     }
+    return [];
   }
 
   private toContentArray(input: unknown): Array<string> {

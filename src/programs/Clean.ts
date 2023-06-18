@@ -14,15 +14,19 @@ export default class Clean extends Program {
   }
 
   private async cleanPackage({ packageDir, distDir, cacheDir }: PackageInfo) {
+    const { isHard } = this.programInfo;
     await Promise.all([
-      Clean.rimraf(path.join(packageDir, 'node_modules')),
+      isHard ? Clean.rimraf(path.join(packageDir, 'node_modules')) : null,
       Clean.rimraf(path.join(distDir, '*'), { glob: true }),
       Clean.rimraf(cacheDir),
     ]);
   }
 
   private async cleanRoot({ rootDir }: RepoInfo) {
-    await Promise.all([Clean.rimraf(path.join(rootDir, 'node_modules'))]);
+    const { isHard } = this.programInfo;
+    await Promise.all([
+      isHard ? Clean.rimraf(path.join(rootDir, 'node_modules')) : null,
+    ]);
   }
 
   private static async rimraf(deletePath: string, options = {}) {

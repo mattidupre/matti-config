@@ -1,7 +1,6 @@
 import type { PackageInfo } from '../entities';
 import path from 'node:path';
 import { pathDotPrefix } from '../utils/pathDotPrefix';
-import { CONFIG_EXTNAME, STORYBOOK_DIRNAME } from '../entities';
 import { Program } from '../lib/Program';
 
 export default class Build extends Program {
@@ -11,21 +10,29 @@ export default class Build extends Program {
     });
   }
 
-  private async lintRoot() {}
-
   private async buildPackage({
     cacheDir,
     packageDir,
     packageType,
+    packageJsExtension,
     target,
   }: PackageInfo) {
-    if (target === 'node') {
-      return;
-    }
-
     const { isDevMode } = this.programInfo;
 
-    const viteConfigPath = path.join(cacheDir, `vite.config${CONFIG_EXTNAME}`);
+    if (target === 'node') {
+      return this.scriptRunner.run('tsc', {
+        args: [
+          '--project',
+          path.join(cacheDir, 'tsconfig-dist.json'),
+          isDevMode ? '--watch' : '',
+        ],
+      });
+    }
+
+    const viteConfigPath = path.join(
+      cacheDir,
+      `vite.config${packageJsExtension}`,
+    );
 
     let distBase;
     if (packageType === 'app') {

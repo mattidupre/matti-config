@@ -25,7 +25,7 @@ export default class Configure extends Program {
   }
 
   private async configureRoot(repoInfo: RepoInfo) {
-    const { rootDir } = repoInfo;
+    const { rootDir, rootJsExtension } = repoInfo;
     const [packagesInfoArr] = await Promise.all([
       this.withIterator(
         () => this.getActivePackageDirsIterator(),
@@ -46,27 +46,33 @@ export default class Configure extends Program {
     );
 
     this.fileWriter.queueJsCode(
-      path.join(rootDir, '.eslintrc.js'),
+      path.join(rootDir, `.eslintrc${rootJsExtension}`),
       Configure.esLintEntry(
         rootDir,
-        packagesInfoArr.map(({ cacheDir }) =>
-          path.join(cacheDir, `.eslintrc-package.js`),
+        packagesInfoArr.map(({ cacheDir, packageJsExtension }) =>
+          path.join(cacheDir, `.eslintrc-package${packageJsExtension}`),
         ),
         true,
       ),
     );
 
     this.fileWriter.queueJsObject(
-      path.join(rootDir, '.prettierrc.js'),
+      path.join(rootDir, `.prettierrc${rootJsExtension}`),
       prettierConfig(),
     );
   }
 
   private async configurePackage(packageInfo: PackageInfo) {
-    const { environments, cacheDir, packageDir, packageConfig } = packageInfo;
+    const {
+      environments,
+      cacheDir,
+      packageDir,
+      packageConfig,
+      packageJsExtension,
+    } = packageInfo;
 
     this.fileWriter.queueJsObject(
-      path.join(cacheDir, 'package-info.js'),
+      path.join(cacheDir, `package-info${packageJsExtension}`),
       packageInfo,
     );
 
@@ -94,11 +100,11 @@ export default class Configure extends Program {
     );
 
     this.fileWriter.queueJsCode(
-      path.join(cacheDir, '.eslintrc-package.js'),
+      path.join(cacheDir, `.eslintrc-package${packageJsExtension}`),
       Configure.esLintEntry(
         cacheDir,
         environments.map((environment) =>
-          path.join(cacheDir, `.eslintrc-${environment}.js`),
+          path.join(cacheDir, `.eslintrc-${environment}${packageJsExtension}`),
         ),
       ),
     );
@@ -118,7 +124,7 @@ export default class Configure extends Program {
 
     environments.forEach((environment) => {
       this.fileWriter.queueJsObject(
-        path.join(cacheDir, `.eslintrc-${environment}.js`),
+        path.join(cacheDir, `.eslintrc-${environment}${packageJsExtension}`),
         (filesQueue) => {
           // Get all tsConfig files to pass to typescript-eslint parserOptions.
           //   see https://github.com/typescript-eslint/typescript-eslint/issues/2094
@@ -136,18 +142,18 @@ export default class Configure extends Program {
     });
 
     this.fileWriter.queueJsConfig(
-      path.join(cacheDir, 'vite.config.js'),
+      path.join(cacheDir, `vite.config${packageJsExtension}`),
       'viteConfig',
     );
 
     this.fileWriter.queueJsConfig(
-      path.join(cacheDir, 'vitest.config.js'),
+      path.join(cacheDir, `vitest.config${packageJsExtension}`),
       'vitestConfig',
     );
 
     if (packageConfig.storybook) {
       this.fileWriter.queueJsConfig(
-        path.join(cacheDir, '.storybook', 'main.js'),
+        path.join(cacheDir, '.storybook', `main${packageJsExtension}`),
         'storybookConfig',
         { basePath: cacheDir, exportObject: true },
       );

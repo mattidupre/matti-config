@@ -27,11 +27,13 @@ const getProgramInfo = (): ProgramInfo => {
     dev: isDevMode,
     root: isExecuteRoot,
     all: isExecuteAll,
+    hard: isHard,
   } = result.argv as unknown as {
     _: [ProgramType];
     dev: boolean;
     all: boolean;
     root: boolean;
+    hard: boolean;
   };
 
   return {
@@ -39,6 +41,7 @@ const getProgramInfo = (): ProgramInfo => {
     isDevMode,
     isExecuteRoot,
     isExecuteAll,
+    isHard,
   };
 };
 

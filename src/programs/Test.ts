@@ -1,6 +1,5 @@
 import type { PackageInfo } from '../entities';
 import path from 'node:path';
-import { CONFIG_EXTNAME } from '../entities';
 import { Program } from '../lib/Program';
 
 export default class Test extends Program {
@@ -10,12 +9,16 @@ export default class Test extends Program {
     });
   }
 
-  public async testPackage({ packageDir, cacheDir }: PackageInfo) {
+  public async testPackage({
+    packageDir,
+    cacheDir,
+    packageJsExtension,
+  }: PackageInfo) {
     const { isDevMode } = this.programInfo;
 
     const vitestConfigPath = path.join(
       cacheDir,
-      `vitest.config${CONFIG_EXTNAME}`,
+      `vitest.config${packageJsExtension}`,
     );
 
     // const testPaths = process.argv.slice(3).filter((a) => !a.startsWith('-'));

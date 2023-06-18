@@ -11,7 +11,8 @@ export default class Lint extends Program {
   }
 
   public async lintPackage(packageInfo: PackageInfo) {
-    const { packageDir, configRootDir, rootDir } = packageInfo;
+    const { packageDir, configRootDir, rootDir, packageJsExtension } =
+      packageInfo;
     const cwd = configRootDir;
     const filesGlob = pathDotPrefix(
       path.relative(cwd, path.join(packageDir, '**/*')),
@@ -21,7 +22,12 @@ export default class Lint extends Program {
       cwd,
       args: [
         '--config',
-        pathDotPrefix(path.relative(cwd, path.join(rootDir, '.eslintrc.js'))),
+        pathDotPrefix(
+          path.relative(
+            cwd,
+            path.join(rootDir, `.eslintrc${packageJsExtension}`),
+          ),
+        ),
         '--resolve-plugins-relative-to',
         configRootDir,
         '--no-error-on-unmatched-pattern',
