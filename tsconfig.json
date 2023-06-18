@@ -10,8 +10,5 @@
     "sourceMap": true
   },
   "include": ["./src/**/*.ts"],
-  "files": [
-    "node_modules/vitest/index.d.cts",
-    "node_modules/jest-extended/types/index.d.ts"
-  ]
+  "exclude": []
 }

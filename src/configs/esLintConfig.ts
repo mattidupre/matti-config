@@ -8,8 +8,16 @@ type ESLintConfig = Record<string, unknown>; // TODO
 // TODO: Rule to prevent creation of index.tsx files.
 
 const baseConfig = {
-  plugins: ['@typescript-eslint', 'filenames', 'import'],
-  extends: ['airbnb-base', 'airbnb-typescript/base', 'prettier'],
+  plugins: [
+    '@typescript-eslint/eslint-plugin',
+    'eslint-plugin-filenames',
+    'eslint-plugin-import',
+  ],
+  extends: [
+    'eslint-config-airbnb-base',
+    'eslint-config-airbnb-typescript/base',
+    'eslint-config-prettier',
+  ],
   overrides: [
     {
       files: ['**/index.ts'],
@@ -66,7 +74,7 @@ const browserConfig = {
     ...baseConfig.overrides,
     {
       files: ['**/*.tsx'],
-      plugins: ['react'], // TODO: Get this from the package dir and not matti-config?
+      // plugins: ['eslint-plugin-react'], // TODO: Get this from the package dir and not matti-config?
       rules: {
         'react/prop-types': 'off',
         'react/require-default-props': 'off',
@@ -75,22 +83,25 @@ const browserConfig = {
     },
   ],
 };
-// 'airbnb/hooks',
 
 const reactConfig = {
   ...browserConfig,
   extends: [
-    'airbnb',
-    'airbnb-typescript',
+    'eslint-config-airbnb',
+    'eslint-config-airbnb-typescript',
+    'eslint-config-airbnb/hooks',
     ...browserConfig.extends.filter(
-      (e) => !['airbnb-base', 'airbnb-typescript/base'].includes(e),
+      (e) =>
+        ![
+          'eslint-config-airbnb-base',
+          'eslint-config-airbnb-typescript/base',
+        ].includes(e),
     ),
   ],
 };
 
 const globsByEnvironment: Record<Environment, [Array<string>, Array<string>]> =
   {
-    config: [['./*.ts?(x)'], []],
     dist: [
       [`./${SOURCE_DIRNAME}/**/*.ts?(x)`],
       [
@@ -103,14 +114,6 @@ const globsByEnvironment: Record<Environment, [Array<string>, Array<string>]> =
   };
 
 const buildConfig = (target: PackageTarget, environment: Environment) => {
-  if (environment === 'config') {
-    return {
-      ...nodeConfig,
-      files: globsByEnvironment[environment][0],
-      excludedFiles: globsByEnvironment[environment][1],
-    };
-  }
-
   if (target === 'node') {
     return {
       ...nodeConfig,
@@ -160,9 +163,7 @@ export const patchConfig = (
 
   return {
     ...config,
-    extends: config.extends.map((extend) =>
-      require.resolve(`eslint-config-${extend}`),
-    ),
+    extends: config.extends.map((extend) => require.resolve(extend)),
     parser: require.resolve('@typescript-eslint/parser'),
     parserOptions: {
       project: tsConfigRelativePaths,

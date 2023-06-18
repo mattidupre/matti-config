@@ -84,7 +84,6 @@ export class Program {
     const distDir = path.join(packageDir, DIST_DIRNAME);
     const isPackageFrontend = ['browser', 'react'].includes(target);
     const environments: PackageInfo['environments'] = [
-      'config',
       'dist',
       'test',
       ...(isPackageFrontend ? (['stories'] as const) : ([] as const)),

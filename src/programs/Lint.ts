@@ -11,11 +11,11 @@ export default class Lint extends Program {
   }
 
   public async lintPackage(packageInfo: PackageInfo) {
-    const { packageDir, configRootDir, rootDir, packageJsExtension } =
+    const { packageDir, configRootDir, rootDir, rootJsExtension, sourceDir } =
       packageInfo;
     const cwd = configRootDir;
     const filesGlob = pathDotPrefix(
-      path.relative(cwd, path.join(packageDir, '**/*')),
+      path.relative(cwd, path.join(sourceDir, '**/*')),
     );
 
     return this.scriptRunner.run('eslint', {
@@ -23,10 +23,7 @@ export default class Lint extends Program {
       args: [
         '--config',
         pathDotPrefix(
-          path.relative(
-            cwd,
-            path.join(rootDir, `.eslintrc${packageJsExtension}`),
-          ),
+          path.relative(cwd, path.join(rootDir, `.eslintrc${rootJsExtension}`)),
         ),
         '--resolve-plugins-relative-to',
         configRootDir,

@@ -99,7 +99,7 @@ export const PROGRAMS: Record<
 
 export type ProgramType = keyof typeof PROGRAMS;
 
-export const ENVIRONMENTS = ['test', 'dist', 'stories', 'config'] as const;
+export const ENVIRONMENTS = ['test', 'dist', 'stories'] as const;
 
 export type Environment = (typeof ENVIRONMENTS)[number];
 

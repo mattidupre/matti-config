@@ -63,8 +63,6 @@ export default async ({
             path.join(srcRootDir, path.dirname(to)),
           ]),
         ),
-        react: path.join(configRootDir, 'node_modules', 'react'),
-        'react-dom': path.join(configRootDir, 'node_modules', 'react-dom'),
       },
     },
     build: {
@@ -88,6 +86,7 @@ export default async ({
       ...(isPackageFrontend
         ? [
             vanillaExtractPlugin({
+              identifiers: 'debug',
               esbuildOptions: {
                 // Vanilla Extract doesn't seem to like tsconfig project references.
                 tsconfig: path.join(cacheDir, 'tsconfig-dist.json'),

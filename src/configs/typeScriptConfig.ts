@@ -6,24 +6,6 @@ import { TsConfigJson } from 'type-fest';
 
 // https://github.com/dominikg/tsconfck
 
-/*
-"target": "ESNext",
-"useDefineForClassFields": true,
-"lib": ["DOM", "DOM.Iterable", "ESNext"],
-"allowJs": false,
-"skipLibCheck": true,
-"esModuleInterop": false,
-"allowSyntheticDefaultImports": true,
-"strict": true,
-"forceConsistentCasingInFileNames": true,
-"module": "ESNext",
-"moduleResolution": "bundler",
-"resolveJsonModule": true,
-"isolatedModules": true,
-"noEmit": true,
-"jsx": "react-jsx"
-*/
-
 const baseCompilerOptions: TsConfigJson['compilerOptions'] = {
   composite: true,
   forceConsistentCasingInFileNames: true,
@@ -35,6 +17,7 @@ const baseCompilerOptions: TsConfigJson['compilerOptions'] = {
   allowSyntheticDefaultImports: true,
   resolveJsonModule: true,
   // isolatedModules: true,
+  noImplicitAny: true,
   skipLibCheck: true,
   allowJs: false,
   sourceMap: true,
@@ -44,7 +27,6 @@ const optionsByEnvironment: Record<
   Environment,
   TsConfigJson['compilerOptions']
 > = {
-  config: { strict: true },
   dist: { strict: true },
   test: { strict: false },
   stories: { strict: false },
@@ -52,17 +34,22 @@ const optionsByEnvironment: Record<
 
 const baseTypes = ['@modyfi/vite-plugin-yaml/modules'];
 
+const localTypesByEnvironment: Record<Environment, Array<string>> = {
+  dist: [],
+  test: [path.join(__dirname, 'vitestSetup.d.ts')],
+  stories: [],
+};
+
 const typesByEnvironment: Record<Environment, Array<string>> = {
-  config: [],
   dist: ['vite/client'],
-  test: ['jest-extended', 'vitest/globals'],
+  test: [], // ['vitest/globals', 'jest-extended'],
   stories: [],
 };
 
 const typesByTarget: Record<PackageTarget, Array<string>> = {
   browser: [],
-  react: ['@types/react'],
-  node: ['node'],
+  react: [],
+  node: ['@types/node'],
   universal: [],
 };
 
@@ -84,7 +71,6 @@ const optionsByTarget: Record<PackageTarget, TsConfigJson['compilerOptions']> =
   };
 
 const pathsByEnvironment: Record<Environment, [string, null | string]> = {
-  config: ['.', null],
   dist: ['./src', './dist'],
   test: ['./src', null],
   stories: ['./src', null],
@@ -92,7 +78,6 @@ const pathsByEnvironment: Record<Environment, [string, null | string]> = {
 
 const globsByEnvironment: Record<Environment, [Array<string>, Array<string>]> =
   {
-    config: [['./*'], []],
     dist: [['./src/**/*'], ['./src/**/*.test.*', './src/**/*.stories.*']],
     test: [['./src/**/*'], ['./src/**/*.stories.*']],
     stories: [['./src/**/*'], ['./src/**/*.test.*']],
@@ -103,6 +88,9 @@ export default (
   environment: Environment,
 ) => {
   const baseDir = path.relative(cacheDir, packageDir);
+
+  // const pathRelative = (targetPath: string) =>
+  //   pathDotPrefix(path.relative(packageDir, targetPath));
   const [srcDir, distDir] = pathsByEnvironment[environment];
 
   const [include, exclude] = globsByEnvironment[environment].map((globs) =>
@@ -124,25 +112,15 @@ export default (
             [pathDotPrefix(path.join(srcDir, to))],
           ]),
         ),
-        react: [path.join(configRootDir, 'node_modules', 'react')],
-        'react-dom': [path.join(configRootDir, 'node_modules', 'react-dom')],
       },
-      typeRoots: [
-        pathDotPrefix(
-          path.join(path.relative(cacheDir, packageDir), 'node_modules'),
-        ),
-        pathDotPrefix(
-          path.join(path.relative(cacheDir, rootDir), 'node_modules'),
-        ),
-        pathDotPrefix(
-          path.join(path.relative(cacheDir, configRootDir), 'node_modules'),
-        ),
-      ],
       types: [
-        ...baseTypes,
-        ...typesByEnvironment[environment],
-        ...typesByTarget[target],
-      ].map((t) => path.join(configRootDir, 'node_modules', t)),
+        ...localTypesByEnvironment[environment],
+        ...[
+          ...baseTypes,
+          ...typesByEnvironment[environment],
+          ...typesByTarget[target],
+        ].map((t) => path.join(configRootDir, 'node_modules', t)),
+      ],
     },
     include,
     exclude,
