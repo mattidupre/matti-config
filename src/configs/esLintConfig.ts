@@ -32,17 +32,8 @@ const baseConfig = {
     'import/order': 'off',
     'import/prefer-default-export': 'off',
     'prefer-destructuring': 'off',
-    'react/function-component-definition': 'off',
     '@typescript-eslint/camelcase': 'off',
     '@typescript-eslint/quotes': ['error', 'single'],
-    'import/no-extraneous-dependencies': [
-      'warn',
-      {
-        devDependencies: ['**/*.test.ts', '**/*.test.tsx'],
-        optionalDependencies: false,
-        peerDependencies: true,
-      },
-    ],
     // 'filenames/match-exported': [2, null, null, true],
   },
 };

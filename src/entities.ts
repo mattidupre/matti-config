@@ -158,7 +158,7 @@ export type PackageInfo = RepoInfo & {
   packageDir: string;
   sourceDir: string;
   distDir: string;
-  packageType: string;
+  packageType: PackageType;
   environments: ReadonlyArray<Environment>;
   target: PackageTarget;
   isPackageAtRoot: boolean;

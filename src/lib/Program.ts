@@ -3,6 +3,7 @@ import path from 'node:path';
 import { WorkspacesNavigator } from '../utils/WorkspacesNavigator';
 import { FileReader } from './FileReader';
 import { FileWriter } from './FileWriter';
+import { FileDeleter } from './FileDeleter';
 import { ScriptRunner } from './ScriptRunner';
 import {
   PROGRAMS,
@@ -21,6 +22,7 @@ export class Program {
   protected readonly programName: keyof typeof PROGRAMS;
   protected readonly fileReader: InstanceType<typeof FileReader>;
   protected readonly fileWriter: InstanceType<typeof FileWriter>;
+  protected readonly fileDeleter: InstanceType<typeof FileDeleter>;
   protected readonly scriptRunner: InstanceType<typeof ScriptRunner>;
   private readonly workspacesNavigator: InstanceType<
     typeof WorkspacesNavigator
@@ -32,6 +34,7 @@ export class Program {
     this.programName = programInfo.program;
     this.fileReader = new FileReader();
     this.fileWriter = new FileWriter();
+    this.fileDeleter = new FileDeleter();
     this.scriptRunner = new ScriptRunner(CONFIG_APP_DIST_DIR);
     this.workspacesNavigator = new WorkspacesNavigator(this.cwd);
   }

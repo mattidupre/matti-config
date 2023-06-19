@@ -68,7 +68,7 @@ export default async ({
     build: {
       sourcemap: true,
       outDir: DIST_DIRNAME,
-      emptyOutDir: true,
+      emptyOutDir: false,
       ...buildOptionsByTarget[target],
       ...buildOptionsByPackageType[packageType],
     },
@@ -76,10 +76,10 @@ export default async ({
       ViteYaml(),
       ...(isLibrary
         ? [
-            dts({
-              insertTypesEntry: true,
-              tsConfigFilePath: path.join(cacheDir, 'tsconfig-package.json'),
-            }),
+            // dts({
+            //   insertTypesEntry: true,
+            //   tsConfigFilePath: path.join(cacheDir, 'tsconfig-package.json'),
+            // }),
           ]
         : []),
       ...(isReact ? [react()] : []),

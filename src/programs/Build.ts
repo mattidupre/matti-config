@@ -12,6 +12,7 @@ export default class Build extends Program {
 
   private async buildPackage({
     cacheDir,
+    distDir,
     packageDir,
     packageType,
     packageJsExtension,
@@ -49,12 +50,32 @@ export default class Build extends Program {
       }
     }
 
-    return this.scriptRunner.run(distBase, {
-      args: [
-        '--config',
-        pathDotPrefix(path.relative(this.scriptRunner.cwd, viteConfigPath)),
-        pathDotPrefix(path.relative(this.scriptRunner.cwd, packageDir)),
-      ],
-    });
+    await this.fileDeleter.rimraf(path.join(distDir, '*'));
+
+    return Promise.all([
+      this.scriptRunner.run(distBase, {
+        args: [
+          '--config',
+          pathDotPrefix(path.relative(this.scriptRunner.cwd, viteConfigPath)),
+          pathDotPrefix(path.relative(this.scriptRunner.cwd, packageDir)),
+        ],
+      }),
+      ...(packageType === 'library'
+        ? [
+            this.scriptRunner
+              .run('tsc', {
+                args: [
+                  '--project',
+                  path.join(cacheDir, 'tsconfig-dist.json'),
+                  '--emitDeclarationOnly',
+                  // '--declaration',
+                  '--declarationMap',
+                  ...(isDevMode ? ['--watch'] : []),
+                ],
+              })
+              .then(() => console.log('wtf?')),
+          ]
+        : []),
+    ]).then(() => {});
   }
 }

@@ -1,7 +1,6 @@
 import { Program } from '../lib/Program';
 import path from 'node:path';
 import { PackageInfo, RepoInfo } from '../entities';
-import rimraf from 'rimraf';
 
 export default class Clean extends Program {
   public async run() {
@@ -16,27 +15,20 @@ export default class Clean extends Program {
   private async cleanPackage({ packageDir, distDir, cacheDir }: PackageInfo) {
     const { isHard } = this.programInfo;
     await Promise.all([
-      isHard ? Clean.rimraf(path.join(packageDir, 'node_modules')) : null,
-      Clean.rimraf(path.join(distDir, '*'), { glob: true }),
-      Clean.rimraf(cacheDir),
+      isHard
+        ? this.fileDeleter.rimraf(path.join(packageDir, 'node_modules'))
+        : null,
+      this.fileDeleter.rimraf(path.join(distDir, '*'), { glob: true }),
+      this.fileDeleter.rimraf(cacheDir),
     ]);
   }
 
   private async cleanRoot({ rootDir }: RepoInfo) {
     const { isHard } = this.programInfo;
     await Promise.all([
-      isHard ? Clean.rimraf(path.join(rootDir, 'node_modules')) : null,
+      isHard
+        ? this.fileDeleter.rimraf(path.join(rootDir, 'node_modules'))
+        : null,
     ]);
-  }
-
-  private static async rimraf(deletePath: string, options = {}) {
-    return new Promise((resolve, reject) => {
-      rimraf(deletePath, options, (err) => {
-        if (err) {
-          return reject(err);
-        }
-        resolve(undefined);
-      });
-    });
   }
 }

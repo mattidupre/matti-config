@@ -42,7 +42,7 @@ const localTypesByEnvironment: Record<Environment, Array<string>> = {
 
 const typesByEnvironment: Record<Environment, Array<string>> = {
   dist: ['vite/client'],
-  test: [], // ['vitest/globals', 'jest-extended'],
+  test: [],
   stories: [],
 };
 
@@ -79,8 +79,8 @@ const pathsByEnvironment: Record<Environment, [string, null | string]> = {
 const globsByEnvironment: Record<Environment, [Array<string>, Array<string>]> =
   {
     dist: [['./src/**/*'], ['./src/**/*.test.*', './src/**/*.stories.*']],
-    test: [['./src/**/*'], ['./src/**/*.stories.*']],
-    stories: [['./src/**/*'], ['./src/**/*.test.*']],
+    test: [['./src/**/*.test.*'], []],
+    stories: [['./src/**/*.stories.*'], []],
   };
 
 export default (
@@ -105,6 +105,11 @@ export default (
       baseUrl: baseDir,
       rootDir: pathDotPrefix(path.join(baseDir, srcDir)),
       outDir: distDir ? pathDotPrefix(path.join(baseDir, distDir)) : undefined,
+      tsBuildInfoFile: distDir
+        ? pathDotPrefix(
+            path.join(baseDir, distDir, `tsconfig-${environment}.tsbuildinfo`),
+          )
+        : undefined,
       paths: {
         ...Object.fromEntries(
           RESOLVE_ALIASES.map(([from, to]) => [
@@ -123,6 +128,9 @@ export default (
       ],
     },
     include,
-    exclude,
+    exclude: [
+      ...exclude,
+      // '**/node_modules/**'
+    ],
   };
 };
