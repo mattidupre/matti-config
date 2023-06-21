@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "bin": "./src/cli.js",
+  "bin": "./dist/cli.js",
   "scripts": {
     "build": "rm -rf dist/* ||: && tsc --project tsconfig.json --declaration",
     "watch": "npm build -- --watch"
