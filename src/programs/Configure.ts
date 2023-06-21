@@ -64,12 +64,20 @@ export default class Configure extends Program {
 
   private async configurePackage(packageInfo: PackageInfo) {
     const {
-      environments,
+      environments: unsortedEnvironments,
       cacheDir,
       packageDir,
       packageConfig,
       packageJsExtension,
     } = packageInfo;
+
+    // Make sure tsconfig-dist runs last so it appears last in tsconfig-package.
+    // This is so test and storybook files have a chance to be globbed first,
+    // since tsconfig-dist is a catch-all.
+    const environments = [
+      ...unsortedEnvironments.filter((e) => e !== 'dist'),
+      'dist',
+    ] as typeof unsortedEnvironments;
 
     this.fileWriter.queueJsObject(
       path.join(cacheDir, `package-info${packageJsExtension}`),

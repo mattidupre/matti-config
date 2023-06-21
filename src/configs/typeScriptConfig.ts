@@ -17,7 +17,6 @@ const baseCompilerOptions: TsConfigJson['compilerOptions'] = {
   allowSyntheticDefaultImports: true,
   resolveJsonModule: true,
   // isolatedModules: true,
-  noImplicitAny: true,
   skipLibCheck: true,
   allowJs: false,
   sourceMap: true,
@@ -27,9 +26,9 @@ const optionsByEnvironment: Record<
   Environment,
   TsConfigJson['compilerOptions']
 > = {
-  dist: { strict: true },
-  test: { strict: false },
-  stories: { strict: false },
+  dist: { strict: true, noImplicitAny: true },
+  test: { strict: false, noImplicitAny: false },
+  stories: { strict: false, noImplicitAny: true },
 };
 
 const baseTypes = ['@modyfi/vite-plugin-yaml/modules'];
@@ -78,9 +77,10 @@ const pathsByEnvironment: Record<Environment, [string, null | string]> = {
 
 const globsByEnvironment: Record<Environment, [Array<string>, Array<string>]> =
   {
-    dist: [['./src/**/*'], ['./src/**/*.test.*', './src/**/*.stories.*']],
-    test: [['./src/**/*.test.*'], []],
-    stories: [['./src/**/*.stories.*'], []],
+    test: [['./src/**/*'], ['./src/**/*.stories.*']],
+    stories: [['./src/**/*'], ['./src/**/*.test.*']],
+    // Dist should be listed last. (Sorted elsewhere.)
+    dist: [['./src/**/*'], ['./src/**/*.stories.*', './src/**/*.test.*']],
   };
 
 export default (

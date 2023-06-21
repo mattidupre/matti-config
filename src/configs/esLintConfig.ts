@@ -12,6 +12,7 @@ const baseConfig = {
     '@typescript-eslint/eslint-plugin',
     'eslint-plugin-filenames',
     'eslint-plugin-import',
+    'eslint-plugin-react-refresh',
   ],
   extends: [
     'eslint-config-airbnb-base',
@@ -34,6 +35,10 @@ const baseConfig = {
     'prefer-destructuring': 'off',
     '@typescript-eslint/camelcase': 'off',
     '@typescript-eslint/quotes': ['error', 'single'],
+    'react-refresh/only-export-components': [
+      'warn',
+      { allowConstantExport: true },
+    ],
     // 'filenames/match-exported': [2, null, null, true],
   },
 };
@@ -70,6 +75,7 @@ const browserConfig = {
         'react/prop-types': 'off',
         'react/require-default-props': 'off',
         'react/jsx-props-no-spreading': 'off',
+        'react/react-in-jsx-scope': 'off',
       },
     },
   ],

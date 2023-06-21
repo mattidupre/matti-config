@@ -44,7 +44,7 @@ export default class Build extends Program {
       }
     } else {
       if (isDevMode) {
-        distBase = 'vite build --watch';
+        distBase = 'vite build --minify false --watch';
       } else {
         distBase = 'vite build';
       }
@@ -68,7 +68,6 @@ export default class Build extends Program {
                   '--project',
                   path.join(cacheDir, 'tsconfig-dist.json'),
                   '--emitDeclarationOnly',
-                  // '--declaration',
                   '--declarationMap',
                   ...(isDevMode ? ['--watch'] : []),
                 ],

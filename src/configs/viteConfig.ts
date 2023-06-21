@@ -72,6 +72,7 @@ export default async ({
       ...buildOptionsByTarget[target],
       ...buildOptionsByPackageType[packageType],
     },
+    // assetsInclude: ['**/*.woff2'],
     plugins: [
       ViteYaml(),
       ...(isLibrary
