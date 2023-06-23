@@ -17,7 +17,10 @@ export const DEFAULT_CONFIG_COMMENT = [
   "Do not change it's content.",
 ];
 
-export const RESOLVE_ALIASES: ReadonlyArray<[string, string]> = [['~/*', '*']];
+export const RESOLVE_ALIASES: ReadonlyArray<[string, string]> = [
+  ['~/assets/*', './public/assets/*'],
+  ['~/*', './src/*']
+];
 
 export const SOURCE_DIRNAME = 'src';
 

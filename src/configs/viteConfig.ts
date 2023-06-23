@@ -6,6 +6,7 @@ import fs from 'node:fs';
 import { RESOLVE_ALIASES } from '../entities';
 import { vanillaExtractPlugin } from '@vanilla-extract/vite-plugin';
 import ViteYaml from '@modyfi/vite-plugin-yaml';
+import { ImageLoader as VanillaExtractImageLoader } from 'esbuild-vanilla-image-loader';
 import type { PackageInfo, PackageTarget, PackageType } from '../entities';
 import type { UserConfig as ViteConfig } from 'vite';
 import { SOURCE_DIRNAME, DIST_DIRNAME } from '../entities';
@@ -54,13 +55,14 @@ export default async ({
   );
 
   return defineConfig({
+    // assetsInclude: ['**/*.woff2'],
     root: packageDir,
     resolve: {
       alias: {
         ...Object.fromEntries(
           RESOLVE_ALIASES.map(([from, to]) => [
             path.dirname(from),
-            path.join(srcRootDir, path.dirname(to)),
+            path.join(packageDir, path.dirname(to)),
           ]),
         ),
       },
@@ -91,11 +93,19 @@ export default async ({
               esbuildOptions: {
                 // Vanilla Extract doesn't seem to like tsconfig project references.
                 tsconfig: path.join(cacheDir, 'tsconfig-dist.json'),
+                plugins: [
+                  VanillaExtractImageLoader({
+                    filter: /\.(gif|jpe?g|tiff?|png|webp|bmp|svg|woff2)$/,
+                    // dataUrl: false, // Read file as dataurl
+                  }),
+                ],
               },
             }),
           ]
         : []),
     ],
-    // esbuild: { tsconfigRaw },
+    esbuild: {
+      // tsconfigRaw
+    },
   }) as ViteConfig;
 };

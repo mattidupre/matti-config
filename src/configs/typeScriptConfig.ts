@@ -69,6 +69,13 @@ const optionsByTarget: Record<PackageTarget, TsConfigJson['compilerOptions']> =
     },
   };
 
+const extensionsByTarget: Record<PackageTarget, Array<string>> = {
+  browser: ['.ts'],
+  react: ['.ts', '.tsx'],
+  node: ['.ts'],
+  universal: ['.ts'],
+};
+
 const pathsByEnvironment: Record<Environment, [string, null | string]> = {
   dist: ['./src', './dist'],
   test: ['./src', null],
@@ -94,7 +101,12 @@ export default (
   const [srcDir, distDir] = pathsByEnvironment[environment];
 
   const [include, exclude] = globsByEnvironment[environment].map((globs) =>
-    globs.map((glob) => path.join(baseDir, glob)),
+    globs.map(
+      (glob) => path.join(baseDir, glob),
+      // extensionsByTarget[target].map(
+      //   (extension) => `${path.join(baseDir, glob)}${extension}`,
+      // ),
+    ),
   );
 
   return {
@@ -112,10 +124,7 @@ export default (
         : undefined,
       paths: {
         ...Object.fromEntries(
-          RESOLVE_ALIASES.map(([from, to]) => [
-            from,
-            [pathDotPrefix(path.join(srcDir, to))],
-          ]),
+          RESOLVE_ALIASES.map(([from, to]) => [from, [to]]),
         ),
       },
       types: [
@@ -128,9 +137,6 @@ export default (
       ],
     },
     include,
-    exclude: [
-      ...exclude,
-      // '**/node_modules/**'
-    ],
+    exclude,
   };
 };

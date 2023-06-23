@@ -20,7 +20,7 @@ export default class Build extends Program {
   }: PackageInfo) {
     const { isDevMode } = this.programInfo;
 
-    if (target === 'node') {
+    if (target === 'node' || target === 'universal') {
       return this.scriptRunner.run('tsc', {
         args: [
           '--project',
@@ -50,7 +50,7 @@ export default class Build extends Program {
       }
     }
 
-    await this.fileDeleter.rimraf(path.join(distDir, '*'));
+    // await this.fileDeleter.rimraf(path.join(distDir, '*'));
 
     return Promise.all([
       this.scriptRunner.run(distBase, {
@@ -62,17 +62,15 @@ export default class Build extends Program {
       }),
       ...(packageType === 'library'
         ? [
-            this.scriptRunner
-              .run('tsc', {
-                args: [
-                  '--project',
-                  path.join(cacheDir, 'tsconfig-dist.json'),
-                  '--emitDeclarationOnly',
-                  '--declarationMap',
-                  ...(isDevMode ? ['--watch'] : []),
-                ],
-              })
-              .then(() => console.log('wtf?')),
+            this.scriptRunner.run('tsc', {
+              args: [
+                '--project',
+                path.join(cacheDir, 'tsconfig-dist.json'),
+                '--emitDeclarationOnly',
+                '--declarationMap',
+                ...(isDevMode ? ['--watch'] : []),
+              ],
+            }),
           ]
         : []),
     ]).then(() => {});
