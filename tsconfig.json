@@ -1,12 +1,14 @@
 {
   "compilerOptions": {
-    "strict": false, // TODO: Enable"
+    "strict": false, // TODO: Enable
     "downlevelIteration": true,
     "esModuleInterop": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "outDir": "./dist",
-    "target": "ES5",
+    "moduleResolution": "node",
+    "module": "commonjs",
+    "target": "esnext",
     "sourceMap": true
   },
   "include": ["./src/**/*.ts"],

@@ -40,9 +40,8 @@ export class Program {
   }
 
   public static async import(programInfo: ProgramInfo) {
-    const { default: SomeClass } = await import(
-      PROGRAMS[programInfo.program].scriptPath
-    );
+    const { default: SomeClass } = await require(PROGRAMS[programInfo.program]
+      .scriptPath);
     const instance = new SomeClass(programInfo) as InstanceType<typeof Program>;
     return instance.run();
   }
