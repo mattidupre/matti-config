@@ -14,12 +14,15 @@ export default class Clean extends Program {
 
   private async cleanPackage({ packageDir, distDir, cacheDir }: PackageInfo) {
     const { isHard } = this.programInfo;
+
+    const nodeModulesDir = path.join(packageDir, 'node_modules');
+
     await Promise.all([
       isHard
-        ? this.fileDeleter.rimraf(path.join(packageDir, 'node_modules'))
-        : null,
-      this.fileDeleter.rimraf(path.join(distDir, '*'), { glob: true }),
-      this.fileDeleter.rimraf(cacheDir),
+        ? this.fileManager.rimraf(nodeModulesDir)
+        : this.fileManager.rimraf(path.join(nodeModulesDir, '.vite')),
+      this.fileManager.rimraf(path.join(distDir, '*'), { glob: true }),
+      this.fileManager.rimraf(cacheDir),
     ]);
   }
 
@@ -27,7 +30,7 @@ export default class Clean extends Program {
     const { isHard } = this.programInfo;
     await Promise.all([
       isHard
-        ? this.fileDeleter.rimraf(path.join(rootDir, 'node_modules'))
+        ? this.fileManager.rimraf(path.join(rootDir, 'node_modules'))
         : null,
     ]);
   }

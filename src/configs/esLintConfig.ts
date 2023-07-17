@@ -39,6 +39,10 @@ const baseConfig = {
       'warn',
       { allowConstantExport: true },
     ],
+    '@typescript-eslint/consistent-type-exports': [
+      'error',
+      { fixMixedExportsWithInlineTypeSpecifier: true },
+    ],
     // 'filenames/match-exported': [2, null, null, true],
   },
 };
@@ -76,6 +80,7 @@ const browserConfig = {
         'react/require-default-props': 'off',
         'react/jsx-props-no-spreading': 'off',
         'react/react-in-jsx-scope': 'off',
+        'eslintreact/jsx-no-useless-fragment': 'off',
       },
     },
   ],

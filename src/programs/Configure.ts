@@ -65,10 +65,12 @@ export default class Configure extends Program {
   private async configurePackage(packageInfo: PackageInfo) {
     const {
       environments: unsortedEnvironments,
+      rootDir,
       cacheDir,
       packageDir,
       packageConfig,
       packageJsExtension,
+      packageType,
     } = packageInfo;
 
     // Make sure tsconfig-dist runs last so it appears last in tsconfig-package.
@@ -95,6 +97,25 @@ export default class Configure extends Program {
         { comments: 'Vite does not allow custom tsconfig.json paths.' },
       );
     }
+
+    this.fileWriter.queueJson(
+      path.join(packageDir, 'project.json'),
+      {
+        root: path.relative(rootDir, packageDir),
+        projectType: packageType === 'app' ? 'application' : packageType,
+        targets: {
+          m: {
+            executor: 'nx:run-commands',
+            commands: [
+              {
+                command: 'm',
+              },
+            ],
+          },
+        },
+      },
+      { comments: true },
+    );
 
     this.fileWriter.queueJson(
       path.join(cacheDir, 'tsconfig-package.json'),

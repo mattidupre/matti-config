@@ -3,6 +3,12 @@ import path from 'node:path';
 import { pathDotPrefix } from '../utils/pathDotPrefix';
 import { Program } from '../lib/Program';
 
+const EXTRA_FILES = ['.yml', '.yaml'];
+
+const VITE_WATCH_ARGS = '--watch --clearScreen false';
+
+const TSC_WATCH_ARGS = '--watch --preserveWatchOutput';
+
 export default class Build extends Program {
   public async run() {
     await this.withInfo({
@@ -13,6 +19,7 @@ export default class Build extends Program {
   private async buildPackage({
     cacheDir,
     distDir,
+    sourceDir,
     packageDir,
     packageType,
     packageJsExtension,
@@ -20,14 +27,22 @@ export default class Build extends Program {
   }: PackageInfo) {
     const { isDevMode } = this.programInfo;
 
+    await this.fileManager.rimraf(path.join(distDir, '**/*', '*.tsbuildinfo'));
+
     if (target === 'node' || target === 'universal') {
-      return this.scriptRunner.run('tsc', {
-        args: [
-          '--project',
-          path.join(cacheDir, 'tsconfig-dist.json'),
-          isDevMode ? '--watch' : '',
-        ],
-      });
+      return Promise.all([
+        this.fileManager.copyFiles(
+          EXTRA_FILES.map((ext) => `**/*${ext}`),
+          { sourceDir, distDir },
+        ),
+        this.scriptRunner.run('tsc', {
+          args: [
+            '--project',
+            path.join(cacheDir, 'tsconfig-dist.json'),
+            isDevMode ? TSC_WATCH_ARGS : '',
+          ],
+        }),
+      ]).then(() => {});
     }
 
     const viteConfigPath = path.join(
@@ -44,13 +59,11 @@ export default class Build extends Program {
       }
     } else {
       if (isDevMode) {
-        distBase = 'vite build --minify false --watch';
+        distBase = `vite build --minify false ${VITE_WATCH_ARGS}`;
       } else {
         distBase = 'vite build';
       }
     }
-
-    // await this.fileDeleter.rimraf(path.join(distDir, '*'));
 
     return Promise.all([
       this.scriptRunner.run(distBase, {
@@ -68,7 +81,7 @@ export default class Build extends Program {
                 path.join(cacheDir, 'tsconfig-dist.json'),
                 '--emitDeclarationOnly',
                 '--declarationMap',
-                ...(isDevMode ? ['--watch'] : []),
+                isDevMode ? TSC_WATCH_ARGS : '',
               ],
             }),
           ]
