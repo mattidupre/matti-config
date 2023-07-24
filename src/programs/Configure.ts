@@ -1,7 +1,9 @@
 import { Program } from '../lib/Program';
 import typeScriptConfig from '../configs/typeScriptConfig';
 import esLintConfig from '../configs/esLintConfig';
+import nxConfig from '../configs/nxConfig';
 import prettierConfig from '../configs/prettierConfig';
+import packageJsonConfig from '../configs/packageJsonConfig';
 import { pathDotPrefix } from '../utils/pathDotPrefix';
 import path from 'node:path';
 import { PackageInfo, RepoInfo } from '../entities';
@@ -73,6 +75,12 @@ export default class Configure extends Program {
       packageType,
     } = packageInfo;
 
+    this.fileWriter.queueJson(
+      path.join(packageDir, 'package.json'),
+      await packageJsonConfig(packageInfo),
+      { comments: false },
+    );
+
     // Make sure tsconfig-dist runs last so it appears last in tsconfig-package.
     // This is so test and storybook files have a chance to be globbed first,
     // since tsconfig-dist is a catch-all.
@@ -100,21 +108,8 @@ export default class Configure extends Program {
 
     this.fileWriter.queueJson(
       path.join(packageDir, 'project.json'),
-      {
-        root: path.relative(rootDir, packageDir),
-        projectType: packageType === 'app' ? 'application' : packageType,
-        targets: {
-          m: {
-            executor: 'nx:run-commands',
-            commands: [
-              {
-                command: 'm',
-              },
-            ],
-          },
-        },
-      },
-      { comments: true },
+      nxConfig(packageInfo),
+      { comments: false },
     );
 
     this.fileWriter.queueJson(
@@ -173,6 +168,11 @@ export default class Configure extends Program {
     this.fileWriter.queueJsConfig(
       path.join(cacheDir, `vite.config${packageJsExtension}`),
       'viteConfig',
+    );
+
+    this.fileWriter.queueJsConfig(
+      path.join(cacheDir, `rollup.config${packageJsExtension}`),
+      'rollupConfig',
     );
 
     this.fileWriter.queueJsConfig(

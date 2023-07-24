@@ -149,7 +149,7 @@ const buildConfig = (target: PackageTarget, environment: Environment) => {
   }
 };
 
-export const patchConfig = (
+const patchConfig = (
   { rootDir, packageDir, configRootDir }: PackageInfo,
   tsConfigPaths: Array<string>,
   config: any,

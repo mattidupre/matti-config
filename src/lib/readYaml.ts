@@ -1,7 +1,8 @@
 import path from 'node:path';
 import fs from 'node:fs';
+import YAML from 'yaml';
 
-export const readJson = async <TypeT>(
+export const readYaml = async <TypeT>(
   absolutePath: string,
 ): Promise<undefined | TypeT> => {
   const packagePath = path.join(absolutePath);
@@ -9,7 +10,7 @@ export const readJson = async <TypeT>(
     return Promise.resolve(undefined);
   }
   const fileString = await fs.promises.readFile(packagePath);
-  const fileData = JSON.parse(String(fileString));
+  const fileData = YAML.parse(String(fileString));
 
   return fileData as TypeT;
 };

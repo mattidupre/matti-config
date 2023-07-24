@@ -31,6 +31,18 @@ const buildOptionsByPackageType: Record<PackageType, ViteConfig['build']> = {
     },
     rollupOptions: {
       external: ['react'],
+      output: [
+        {
+          format: 'commonjs',
+          entryFileNames: '[name].cjs',
+          // preserveModules: true,
+        },
+        {
+          format: 'module',
+          entryFileNames: '[name].mjs',
+          // preserveModules: true,
+        },
+      ],
     },
   },
 };

@@ -68,22 +68,21 @@ export class Program {
   }
 
   public async getPackageInfo(packageDir: string): Promise<PackageInfo> {
-    const [
-      repoInfo,
-      isPackageAtRoot,
-      packageConfig,
-      { name, type: packageJsonType },
-    ] = await Promise.all([
-      this.getRepoInfo(),
-      this.getIsAtRoot(packageDir),
-      this.fileReader.readPackageConfig(packageDir),
-      this.fileReader.readPackageJson(packageDir),
-    ]);
+    const [repoInfo, isPackageAtRoot, packageConfig, packageJson] =
+      await Promise.all([
+        this.getRepoInfo(),
+        this.getIsAtRoot(packageDir),
+        this.fileReader.readPackageConfig(packageDir),
+        this.fileReader.readPackageJson(packageDir),
+      ]);
+
+    const { name, type: packageJsonType } = packageJson;
     const { rootDir } = repoInfo;
     const { type: packageType, target } = packageConfig;
     const cacheDir = path.join(packageDir, CONFIG_CACHE_DIRNAME);
     const sourceDir = path.join(packageDir, SOURCE_DIRNAME);
     const distDir = path.join(packageDir, DIST_DIRNAME);
+    // TODO: package node_modules dir "modulesDir"
     const isPackageFrontend = ['browser', 'react'].includes(target);
     const environments: PackageInfo['environments'] = [
       'dist',
@@ -103,6 +102,7 @@ export class Program {
       cacheDir,
       packageConfig,
       packageType,
+      packageJson,
       isPackageAtRoot,
       target,
       isPackageFrontend,

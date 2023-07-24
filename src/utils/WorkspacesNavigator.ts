@@ -5,6 +5,7 @@ import fg from 'fast-glob';
 import type { PackageJson } from 'type-fest';
 import { Memoize } from 'typescript-memoize';
 import { readJson } from '../lib/readJson';
+import { readYaml } from '../lib/readYaml';
 import { stream } from 'event-iterator';
 
 export type WorkspaceInfo = {
@@ -62,10 +63,7 @@ export class WorkspacesNavigator {
 
     for (const thisPackageDir of generateParentPackageDirs(this.cwd)) {
       firstPackageDir = thisPackageDir;
-      const { workspaces } = await WorkspacesNavigator.readPackageJson(
-        thisPackageDir,
-      );
-      if (workspaces) {
+      if (await WorkspacesNavigator.readWorkspaces(thisPackageDir)) {
         return thisPackageDir;
       }
     }
@@ -87,8 +85,7 @@ export class WorkspacesNavigator {
    */
   @Memoize()
   private async getWorkspaces(): Promise<PackageJson['workspaces']> {
-    return (await WorkspacesNavigator.readPackageJson(await this.getRootDir()))
-      ?.workspaces;
+    return await WorkspacesNavigator.readWorkspaces(await this.getRootDir());
   }
 
   /**
@@ -140,9 +137,27 @@ export class WorkspacesNavigator {
   }
 
   @Memoize()
+  private static async readWorkspaces(
+    absolutePackagePath: string,
+  ): Promise<undefined | PackageJson['workspaces'] | Array<string>> {
+    const [packageJson, workspaceYaml] = await Promise.all([
+      WorkspacesNavigator.readPackageJson(absolutePackagePath),
+      WorkspacesNavigator.readWorkspaceYaml(absolutePackagePath),
+    ]);
+    return workspaceYaml?.packages ?? packageJson?.workspaces ?? undefined;
+  }
+
+  @Memoize()
   private static readPackageJson(absolutePackagePath: string) {
     return readJson<PackageJson>(
       path.join(absolutePackagePath, 'package.json'),
+    );
+  }
+
+  @Memoize()
+  private static readWorkspaceYaml(absolutePackagePath: string) {
+    return readYaml<{ packages: Array<string> }>(
+      path.join(absolutePackagePath, 'pnpm-workspace.yaml'),
     );
   }
 }

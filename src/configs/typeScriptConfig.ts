@@ -12,6 +12,7 @@ const baseCompilerOptions: TsConfigJson['compilerOptions'] = {
   target: 'ESNext',
   lib: ['DOM', 'DOM.Iterable', 'ESNext'],
   module: 'ESNext',
+  moduleResolution: 'node',
   esModuleInterop: true,
   useDefineForClassFields: true,
   allowSyntheticDefaultImports: true,
@@ -55,17 +56,17 @@ const typesByTarget: Record<PackageTarget, Array<string>> = {
 const optionsByTarget: Record<PackageTarget, TsConfigJson['compilerOptions']> =
   {
     browser: {
-      moduleResolution: 'NodeNext',
+      // moduleResolution: 'node',
     },
     react: {
-      moduleResolution: 'NodeNext',
+      // moduleResolution: 'node',
       jsx: 'react-jsx',
     },
     node: {
-      moduleResolution: 'NodeNext',
+      // moduleResolution: 'node',
     },
     universal: {
-      moduleResolution: 'NodeNext',
+      // moduleResolution: 'node',
     },
   };
 
@@ -123,6 +124,7 @@ export default (
           )
         : undefined,
       paths: {
+        tslib: [path.join(configRootDir, 'node_modules', 'tslib')],
         ...Object.fromEntries(
           RESOLVE_ALIASES.map(([from, to]) => [from, [to]]),
         ),

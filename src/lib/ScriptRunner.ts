@@ -1,8 +1,12 @@
 import execSh from 'exec-sh';
+import terminate from 'terminate/promise';
+import { spawn, ChildProcess } from 'node:child_process';
+import { Writable } from 'node:stream';
 
 type Options = {
   args?: Array<string>;
   cwd?: string;
+  onOutput?: (message: string) => void;
 };
 
 export class ScriptRunner {
@@ -10,20 +14,62 @@ export class ScriptRunner {
 
   constructor(cwd: string) {
     this.cwd = cwd;
+
+    process.on('exit', this.terminate);
+    process.on('error', this.terminate);
+    process.on('SIGINT', this.terminate);
   }
 
-  async run(script: string, { args = [], cwd }: Options = {}) {
-    const command = ['npx', script]
-      .concat(args.map((arg) => arg.toString()))
-      .join(' ');
+  async run(script: string, { args = [], cwd, onOutput }: Options = {}) {
+    const argStrings = args.map((arg) => arg.toString());
 
-    try {
-      await execSh.promise(command, {
-        cwd: cwd ?? this.cwd,
-      });
-    } catch (err) {
-      console.error(err);
-      process.exit();
-    }
+    return new Promise<void>(async (resolve, reject) => {
+      let isResolved = false;
+
+      const handleError = (err: Error) => {
+        console.error(err);
+        if (!isResolved) {
+          isResolved = true;
+          reject(err);
+        }
+      };
+
+      const handleExit = () => {
+        if (!isResolved) {
+          isResolved = true;
+          resolve();
+        }
+      };
+
+      const handleOutput = (data: Buffer) => {
+        onOutput?.(data.toString());
+      };
+
+      let child: ChildProcess;
+
+      try {
+        child = spawn('npx', [script, ...argStrings], {
+          shell: true,
+          cwd: cwd ?? this.cwd,
+        });
+
+        child.on('error', handleError);
+        child.on('exit', handleExit);
+        child.stdout.on('data', (data) => {
+          process.stdout.write(data);
+          handleOutput(data);
+        });
+        child.stderr.on('data', (data) => {
+          process.stderr.write(data);
+          handleOutput(data);
+        });
+      } catch (err) {
+        handleError(err);
+      }
+    });
+  }
+
+  private terminate() {
+    terminate(process.pid);
   }
 }

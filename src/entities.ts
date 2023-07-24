@@ -1,5 +1,7 @@
 import path from 'node:path';
 
+import type { PackageJson } from 'type-fest';
+
 import { z } from 'zod';
 
 export const CONFIG_APP_NAME = 'matti-kit';
@@ -19,7 +21,7 @@ export const DEFAULT_CONFIG_COMMENT = [
 
 export const RESOLVE_ALIASES: ReadonlyArray<[string, string]> = [
   ['~/assets/*', './public/assets/*'],
-  ['~/*', './src/*']
+  ['~/*', './src/*'],
 ];
 
 export const SOURCE_DIRNAME = 'src';
@@ -98,6 +100,11 @@ export const PROGRAMS: Record<
     scriptPath: path.join(__dirname, 'programs/Clean'),
     acceptedOptions: ['root', 'hard'],
   },
+  debug: {
+    description: 'Debug.',
+    scriptPath: path.join(__dirname, 'programs/Debug'),
+    acceptedOptions: ['root', 'dev'],
+  },
 } as const;
 
 export type ProgramType = keyof typeof PROGRAMS;
@@ -157,6 +164,7 @@ export type RepoInfo = {
 
 export type PackageInfo = RepoInfo & {
   name: string;
+  packageJson: PackageJson;
   cacheDir: string;
   packageDir: string;
   sourceDir: string;
@@ -169,3 +177,7 @@ export type PackageInfo = RepoInfo & {
   packageConfig: PackageConfig;
   packageJsExtension: '.js' | '.cjs';
 };
+
+export const createBuildCompleteMessage = (packageName: string) =>
+  'BUILD COMPLETE';
+// `${CONFIG_APP_NAME} / ${packageName}: BUILD COMPLETE`;
