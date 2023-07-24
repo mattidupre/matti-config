@@ -2,27 +2,6 @@ import path from 'node:path';
 import { defaultsDeep } from 'lodash';
 import { SOURCE_DIRNAME, type PackageInfo } from '../entities';
 
-const configureTarget = (
-  packageInfo: PackageInfo,
-  name: string,
-  command: string,
-  targetOptions: Record<string, unknown> = {},
-) => {
-  const { packageDir } = packageInfo;
-  return {
-    [name]: defaultsDeep(
-      {
-        executor: 'nx:run-commands',
-        options: {
-          cwd: packageDir,
-          command,
-        },
-      },
-      targetOptions,
-    ),
-  };
-};
-
 export default (packageInfo: PackageInfo) => {
   const { packageType, rootDir, packageDir } = packageInfo;
 
@@ -38,9 +17,9 @@ export default (packageInfo: PackageInfo) => {
     sourceRoot: path.join(SOURCE_DIRNAME, path.relative(rootDir, packageDir)),
     projectType: packageType === 'app' ? 'application' : packageType,
     targets: {
-      dev: defaultsDeep({}, defaultTarget, {
+      watch: defaultsDeep({}, defaultTarget, {
         options: {
-          command: 'npx matti-config build --dev',
+          command: 'npx matti-config build --watch',
           parallel: true,
         },
       }),

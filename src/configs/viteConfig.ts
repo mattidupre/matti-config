@@ -1,4 +1,5 @@
 import path from 'node:path';
+import fg from 'fast-glob';
 import { defineConfig } from 'vite';
 import dts from 'vite-plugin-dts';
 import react from '@vitejs/plugin-react';
@@ -14,57 +15,52 @@ import { SOURCE_DIRNAME, DIST_DIRNAME } from '../entities';
 // TODO: See https://www.npmjs.com/package/vite-node
 // TODO: See https://www.npmjs.com/package/vite-plugin-node
 
-const buildOptionsByTarget: Record<PackageTarget, ViteConfig['build']> = {
-  browser: { target: 'esnext' },
-  react: { target: 'esnext' },
-  node: { target: 'node12' },
-  universal: { target: 'esnext' },
-};
-
-const buildOptionsByPackageType: Record<PackageType, ViteConfig['build']> = {
-  app: {},
-  library: {
-    lib: {
-      entry: `./${SOURCE_DIRNAME}/index.ts`,
-      fileName: 'index',
-      formats: ['es', 'cjs'],
-    },
-    rollupOptions: {
-      external: ['react'],
-      output: [
-        {
-          format: 'commonjs',
-          entryFileNames: '[name].cjs',
-          // preserveModules: true,
-        },
-        {
-          format: 'module',
-          entryFileNames: '[name].mjs',
-          // preserveModules: true,
-        },
-      ],
-    },
-  },
-};
-
 export default async ({
   target,
   rootDir,
   cacheDir,
   packageDir,
+  sourceDir,
   packageType,
   configRootDir,
   isPackageFrontend,
 }: PackageInfo): Promise<ViteConfig> => {
   const isLibrary = packageType === 'library';
   const isReact = target === 'react';
-  const isNode = target === 'node';
-  const srcRootDir = path.join(packageDir, 'src');
+  const entryExtension = isLibrary ? '.ts' : '.html';
+  const baseDir = isLibrary ? sourceDir : packageDir;
 
-  const tsconfigRaw = await fs.promises.readFile(
-    path.join(rootDir, 'tsconfig.json'),
-    'utf-8',
-  );
+  const entryNames = (
+    await fg([`*${entryExtension}`], {
+      cwd: baseDir,
+    })
+  ).map((entryName) => entryName.replace(/\.[^/.]+$/, ''));
+
+  const rollupOptions: ViteConfig['build']['rollupOptions'] = {
+    input: Object.fromEntries(
+      entryNames.map((entryName) => [
+        entryName,
+        path.join(baseDir, `${entryName}${entryExtension}`),
+      ]),
+    ),
+    ...(isLibrary
+      ? {
+          external: ['react'],
+          output: [
+            {
+              format: 'commonjs',
+              entryFileNames: '[name].cjs',
+              // preserveModules: true,
+            },
+            {
+              format: 'module',
+              entryFileNames: '[name].mjs',
+              // preserveModules: true,
+            },
+          ],
+        }
+      : {}),
+  };
 
   return defineConfig({
     // assetsInclude: ['**/*.woff2'],
@@ -83,8 +79,17 @@ export default async ({
       sourcemap: true,
       outDir: DIST_DIRNAME,
       emptyOutDir: false,
-      ...buildOptionsByTarget[target],
-      ...buildOptionsByPackageType[packageType],
+      target: 'esnext',
+      ...(isLibrary
+        ? {
+            lib: {
+              entry: `./${SOURCE_DIRNAME}/index.ts`,
+              fileName: 'index',
+              formats: ['es', 'cjs'],
+            },
+          }
+        : {}),
+      rollupOptions,
     },
     // assetsInclude: ['**/*.woff2'],
     plugins: [
@@ -101,6 +106,7 @@ export default async ({
       ...(isPackageFrontend
         ? [
             vanillaExtractPlugin({
+              // TODO: Figure out how to handle multiple entries.
               identifiers: 'debug',
               esbuildOptions: {
                 // Vanilla Extract doesn't seem to like tsconfig project references.
