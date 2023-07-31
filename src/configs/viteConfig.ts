@@ -3,7 +3,6 @@ import fg from 'fast-glob';
 import { defineConfig } from 'vite';
 import dts from 'vite-plugin-dts';
 import react from '@vitejs/plugin-react';
-import fs from 'node:fs';
 import { RESOLVE_ALIASES } from '../entities';
 import { vanillaExtractPlugin } from '@vanilla-extract/vite-plugin';
 import ViteYaml from '@modyfi/vite-plugin-yaml';

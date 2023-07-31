@@ -61,7 +61,7 @@ export default class Build extends Program {
         path.join(cacheDir, 'tsconfig-dist.json'),
         '--emitDeclarationOnly',
         '--declarationMap',
-        this.programInfo.isDevMode ? TSC_WATCH_ARGS : '',
+        this.programInfo.isWatchMode ? TSC_WATCH_ARGS : '',
       ],
     });
   }
@@ -79,7 +79,7 @@ export default class Build extends Program {
         path.join(cacheDir, `rollup.config${packageJsExtension}`),
         '--sourcemap',
         '--no-watch.clearScreen',
-        this.programInfo.isDevMode ? ROLLUP_WATCH_ARGS : '',
+        this.programInfo.isWatchMode ? ROLLUP_WATCH_ARGS : '',
       ],
       onOutput: (message) => {
         if (/created /.test(message)) {
@@ -96,7 +96,7 @@ export default class Build extends Program {
     packageType,
     packageJsExtension,
   }: PackageInfo) {
-    const { isDevMode } = this.programInfo;
+    const { isWatchMode, isWatchProductionMode } = this.programInfo;
 
     const viteConfigPath = path.join(
       cacheDir,
@@ -105,13 +105,15 @@ export default class Build extends Program {
 
     let distBase;
     if (packageType === 'app') {
-      if (isDevMode) {
+      if (isWatchProductionMode) {
+        distBase = `vite build ${VITE_ARGS} ${VITE_WATCH_ARGS}`;
+      } else if (isWatchMode) {
         distBase = `vite ${VITE_ARGS}`;
       } else {
         distBase = `vite build ${VITE_ARGS}`;
       }
     } else {
-      if (isDevMode) {
+      if (isWatchMode) {
         distBase = `vite build --minify false ${VITE_ARGS} ${VITE_WATCH_ARGS}`;
       } else {
         distBase = `vite build ${VITE_ARGS}`;

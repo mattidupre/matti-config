@@ -4,8 +4,7 @@ import type { ProgramType } from './entities';
 import { Program } from './lib/Program';
 import { pick } from 'lodash';
 import yargs from 'yargs';
-import type { ProgramInfo } from './entities';
-import { PROGRAMS, PROGRAMS_OPTIONS } from './entities';
+import { type ProgramInfo, PROGRAMS, PROGRAMS_OPTIONS } from './entities';
 
 const getProgramInfo = (): ProgramInfo => {
   let result = yargs(process.argv.slice(2))
@@ -24,21 +23,19 @@ const getProgramInfo = (): ProgramInfo => {
 
   const {
     _: [program],
-    dev: isDevMode,
+    watch: isWatchMode,
+    watchProduction: isWatchProductionMode,
     root: isExecuteRoot,
     all: isExecuteAll,
     hard: isHard,
   } = result.argv as unknown as {
     _: [ProgramType];
-    dev: boolean;
-    all: boolean;
-    root: boolean;
-    hard: boolean;
-  };
+  } & Partial<Record<keyof typeof PROGRAMS_OPTIONS, boolean>>;
 
   return {
     program,
-    isDevMode,
+    isWatchMode,
+    isWatchProductionMode: isWatchProductionMode ?? isWatchMode,
     isExecuteRoot,
     isExecuteAll,
     isHard,

@@ -14,7 +14,7 @@ export default class Test extends Program {
     cacheDir,
     packageJsExtension,
   }: PackageInfo) {
-    const { isDevMode } = this.programInfo;
+    const { isWatchMode } = this.programInfo;
 
     const vitestConfigPath = path.join(
       cacheDir,
@@ -25,7 +25,7 @@ export default class Test extends Program {
 
     await this.scriptRunner.run('vitest', {
       args: [
-        isDevMode ? 'watch' : 'run',
+        isWatchMode ? 'watch' : 'run',
         `--config ${vitestConfigPath}`,
         `--dir ${packageDir}`,
         `--passWithNoTests`,

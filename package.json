@@ -6,7 +6,7 @@
   "bin": "./dist/cli.js",
   "scripts": {
     "build": "rm -rf dist/* ||: && tsc --project tsconfig.json --declaration",
-    "watch": "npm build -- --watch"
+    "dev": "pnpm run build --watch"
   },
   "dependencies": {
     "@modyfi/vite-plugin-yaml": "^1.0.4",

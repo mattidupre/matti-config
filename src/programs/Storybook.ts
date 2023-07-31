@@ -22,7 +22,7 @@ export default class Storybook extends Program {
       return;
     }
     const cwd = configRootDir;
-    const { isDevMode } = this.programInfo;
+    const { isWatchMode } = this.programInfo;
 
     const baseArgs = [
       // '--type',
@@ -32,7 +32,7 @@ export default class Storybook extends Program {
       path.join(cacheDir, `.storybook`),
     ];
 
-    if (isDevMode) {
+    if (isWatchMode) {
       return await this.scriptRunner.run('storybook dev', {
         args: [...baseArgs, '--no-open', '--port', '3000'],
       });

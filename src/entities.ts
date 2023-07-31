@@ -35,10 +35,16 @@ export const CONFIG_CACHE_DIRNAME = '.kit';
 export const CONFIG_FILENAME = 'kit.config.json';
 
 export const PROGRAMS_OPTIONS = {
-  dev: {
+  watch: {
     description: 'Dev (watch) mode',
     type: 'boolean',
-    alias: 'watch',
+    alias: 'dev',
+    default: false,
+  },
+  watchProduction: {
+    description: 'Production (watch) mode',
+    type: 'boolean',
+    default: false,
   },
   root: {
     description: 'Execute for root only',
@@ -73,17 +79,17 @@ export const PROGRAMS: Record<
   build: {
     description: 'Build the package.',
     scriptPath: path.join(__dirname, 'programs/Build'),
-    acceptedOptions: ['dev'],
+    acceptedOptions: ['watch', 'watchProduction'],
   },
   storybook: {
     description: 'Build storybook.',
     scriptPath: path.join(__dirname, 'programs/Storybook'),
-    acceptedOptions: ['dev'],
+    acceptedOptions: ['watch'],
   },
   test: {
     description: 'Test the package.',
     scriptPath: path.join(__dirname, 'programs/Test'),
-    acceptedOptions: ['dev'],
+    acceptedOptions: ['watch'],
   },
   lint: {
     description: 'Lint the package.',
@@ -103,7 +109,7 @@ export const PROGRAMS: Record<
   debug: {
     description: 'Debug.',
     scriptPath: path.join(__dirname, 'programs/Debug'),
-    acceptedOptions: ['root', 'dev'],
+    acceptedOptions: ['root', 'watch'],
   },
 } as const;
 
@@ -147,7 +153,8 @@ export type PackageConfig = z.infer<typeof PackageConfigSchema>;
 
 export type ProgramInfo = {
   program: ProgramType;
-  isDevMode: boolean;
+  isWatchMode: boolean;
+  isWatchProductionMode: boolean;
   isExecuteRoot: boolean;
   isExecuteAll: boolean;
   isHard: boolean;
