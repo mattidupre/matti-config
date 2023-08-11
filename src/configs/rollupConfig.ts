@@ -1,4 +1,4 @@
-import type { PackageInfo } from '../entities';
+import type { PackageInfo } from '../entities.js';
 import type { RollupOptions } from 'rollup';
 import path from 'node:path';
 import typescript from '@rollup/plugin-typescript';
@@ -7,7 +7,7 @@ import { nodeResolve } from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import yaml from '@rollup/plugin-yaml';
 import alias from '@rollup/plugin-alias';
-import { RESOLVE_ALIASES } from '../entities';
+import { RESOLVE_ALIASES } from '../entities.js';
 
 export default (packageInfo: PackageInfo): RollupOptions => {
   const { sourceDir, distDir, cacheDir, packageDir, packageJson } = packageInfo;

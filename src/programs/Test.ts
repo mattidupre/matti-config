@@ -1,7 +1,7 @@
-import type { PackageInfo } from '../entities';
+import type { PackageInfo } from '../entities.js';
 import path from 'node:path';
-import { pathDotPrefix } from '../utils/pathDotPrefix';
-import { Program } from '../lib/Program';
+import { pathDotPrefix } from '../utils/pathDotPrefix.js';
+import { Program } from '../lib/Program.js';
 
 export default class Test extends Program {
   public async run() {

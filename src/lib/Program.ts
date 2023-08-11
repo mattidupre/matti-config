@@ -3,13 +3,13 @@ import {
   type PackageInfo,
   type RepoInfo,
   CONFIG_APP_CONFIGS_EXTNAME,
-} from '../entities';
+} from '../entities.js';
 import path from 'node:path';
-import { WorkspacesNavigator } from '../utils/WorkspacesNavigator';
-import { FileReader } from './FileReader';
-import { FileWriter } from './FileWriter';
-import { FileManager } from './FileManager';
-import { ScriptRunner } from './ScriptRunner';
+import { WorkspacesNavigator } from '../utils/WorkspacesNavigator.js';
+import { FileReader } from './FileReader.js';
+import { FileWriter } from './FileWriter.js';
+import { FileManager } from './FileManager.js';
+import { ScriptRunner } from './ScriptRunner.js';
 import {
   PROGRAMS,
   CONFIG_CACHE_DIRNAME,
@@ -18,7 +18,7 @@ import {
   CONFIG_APP_DIST_DIR,
   SOURCE_DIRNAME,
   DIST_DIRNAME,
-} from '../entities';
+} from '../entities.js';
 import { Memoize } from 'typescript-memoize';
 
 export class Program {
@@ -46,7 +46,7 @@ export class Program {
 
   public static async import(programInfo: ProgramInfo) {
     const { default: SomeClass } = await import(
-      `${PROGRAMS[programInfo.program].scriptPath}${CONFIG_APP_CONFIGS_EXTNAME}`
+      `${PROGRAMS[programInfo.program].scriptPath}.js`
     );
     const instance = new SomeClass(programInfo) as InstanceType<typeof Program>;
     return instance.run();

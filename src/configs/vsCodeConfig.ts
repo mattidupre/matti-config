@@ -1,5 +1,5 @@
 import path from 'node:path';
-import type { RepoInfo } from '../entities';
+import type { RepoInfo } from '../entities.js';
 
 export const rootConfig = ({ configRootDir }: RepoInfo) => ({
   'prettier.prettierPath': path.join(configRootDir, 'node_modules', 'prettier'),

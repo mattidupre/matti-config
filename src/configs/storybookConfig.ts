@@ -1,9 +1,9 @@
 import path from 'node:path';
-import { STORYBOOK_DIRNAME } from '../entities';
-import type { PackageInfo } from '../entities';
-import { resolveModule } from '../utils/resolveModule';
+import { STORYBOOK_DIRNAME } from '../entities.js';
+import type { PackageInfo } from '../entities.js';
+import { resolveModule } from '../utils/resolveModule.js';
 import { mergeConfig } from 'vite';
-import viteConfig from './viteConfig';
+import viteConfig from './viteConfig.js';
 import type { StorybookViteConfig as StorybookConfig } from '@storybook/builder-vite';
 
 export default (packageInfo: PackageInfo): StorybookConfig => {

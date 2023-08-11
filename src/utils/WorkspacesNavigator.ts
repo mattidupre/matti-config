@@ -4,8 +4,8 @@ import { Transform, Readable } from 'node:stream';
 import fg from 'fast-glob';
 import type { PackageJson } from 'type-fest';
 import { Memoize } from 'typescript-memoize';
-import { readJson } from '../lib/readJson';
-import { readYaml } from '../lib/readYaml';
+import { readJson } from '../lib/readJson.js';
+import { readYaml } from '../lib/readYaml.js';
 import { stream } from 'event-iterator';
 
 export type WorkspaceInfo = {

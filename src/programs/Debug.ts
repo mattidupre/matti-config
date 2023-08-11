@@ -1,6 +1,6 @@
 import path from 'node:path';
-import type { PackageInfo } from '../entities';
-import { Program } from '../lib/Program';
+import type { PackageInfo } from '../entities.js';
+import { Program } from '../lib/Program.js';
 
 export default class Build extends Program {
   public async run() {

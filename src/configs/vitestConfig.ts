@@ -1,8 +1,8 @@
 import { defineConfig, mergeConfig } from 'vitest/config';
-import { type PackageInfo, CONFIG_APP_CONFIGS_EXTNAME } from '../entities';
+import { type PackageInfo, CONFIG_APP_CONFIGS_EXTNAME } from '../entities.js';
 import path from 'node:path';
-import viteConfig from './viteConfig';
-import { pathDotPrefix } from '../utils/pathDotPrefix';
+import viteConfig from './viteConfig.js';
+import { pathDotPrefix } from '../utils/pathDotPrefix.js';
 
 export default async (packageInfo: PackageInfo) => {
   const { target, cacheDir, packageJsExtension, packageDir } = packageInfo;

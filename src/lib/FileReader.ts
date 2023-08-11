@@ -1,7 +1,7 @@
 import path from 'node:path';
 import fs from 'node:fs';
-import type { PackageConfig } from '../entities';
-import { CONFIG_FILENAME, PackageConfigSchema } from '../entities';
+import type { PackageConfig } from '../entities.js';
+import { CONFIG_FILENAME, PackageConfigSchema } from '../entities.js';
 import type { JsonObject, PackageJson } from 'type-fest';
 
 export class FileReader {

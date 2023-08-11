@@ -1,11 +1,11 @@
-import { pathDotPrefix } from '../utils/pathDotPrefix';
+import { pathDotPrefix } from '../utils/pathDotPrefix.js';
 import path from 'node:path';
 import {
   RESOLVE_ALIASES,
   CONFIG_APP_DIST_DIR,
   CONFIG_APP_ROOT_DIR,
-} from '../entities';
-import type { Environment, PackageTarget, PackageInfo } from '../entities';
+} from '../entities.js';
+import type { Environment, PackageTarget, PackageInfo } from '../entities.js';
 import { TsConfigJson } from 'type-fest';
 
 // https://github.com/dominikg/tsconfck

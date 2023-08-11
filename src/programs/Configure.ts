@@ -1,14 +1,14 @@
-import { Program } from '../lib/Program';
-import typeScriptConfig from '../configs/typeScriptConfig';
-import * as esLintConfig from '../configs/esLintConfig';
-import * as vsCodeConfig from '../configs/vsCodeConfig';
-import nxConfig from '../configs/nxConfig';
-import prettierConfig from '../configs/prettierConfig';
-import * as packageJsonConfig from '../configs/packageJsonConfig';
-import { pathDotPrefix } from '../utils/pathDotPrefix';
+import { Program } from '../lib/Program.js';
+import typeScriptConfig from '../configs/typeScriptConfig.js';
+import * as esLintConfig from '../configs/esLintConfig.js';
+import * as vsCodeConfig from '../configs/vsCodeConfig.js';
+import nxConfig from '../configs/nxConfig.js';
+import prettierConfig from '../configs/prettierConfig.js';
+import * as packageJsonConfig from '../configs/packageJsonConfig.js';
+import { pathDotPrefix } from '../utils/pathDotPrefix.js';
 import path from 'node:path';
 import _ from 'lodash';
-import { PackageInfo, RepoInfo } from '../entities';
+import { PackageInfo, RepoInfo } from '../entities.js';
 
 // TODO: .gitignore
 

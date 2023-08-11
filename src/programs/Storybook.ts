@@ -1,8 +1,8 @@
-import { STORYBOOK_DIRNAME } from '../entities';
-import type { PackageInfo } from '../entities';
+import { STORYBOOK_DIRNAME } from '../entities.js';
+import type { PackageInfo } from '../entities.js';
 import path from 'node:path';
-import { pathDotPrefix } from '../utils/pathDotPrefix';
-import { Program } from '../lib/Program';
+import { pathDotPrefix } from '../utils/pathDotPrefix.js';
+import { Program } from '../lib/Program.js';
 
 export default class Storybook extends Program {
   public async run() {

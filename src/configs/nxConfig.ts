@@ -1,6 +1,6 @@
 import path from 'node:path';
 import _ from 'lodash';
-import { SOURCE_DIRNAME, type PackageInfo } from '../entities';
+import { SOURCE_DIRNAME, type PackageInfo } from '../entities.js';
 
 export default (packageInfo: PackageInfo) => {
   const { packageType, rootDir, packageDir } = packageInfo;

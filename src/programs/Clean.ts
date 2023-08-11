@@ -1,6 +1,6 @@
-import { Program } from '../lib/Program';
+import { Program } from '../lib/Program.js';
 import path from 'node:path';
-import { PackageInfo, RepoInfo } from '../entities';
+import { PackageInfo, RepoInfo } from '../entities.js';
 
 const EXTRA_PACKAGE_FILES = ['tsconfig.json', 'project.json'];
 

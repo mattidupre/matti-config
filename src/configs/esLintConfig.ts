@@ -3,11 +3,11 @@ import type {
   RepoInfo,
   Environment,
   PackageTarget,
-} from '../entities';
-import { pathDotPrefix } from '../utils/pathDotPrefix';
-import { resolveModule } from '../utils/resolveModule';
+} from '../entities.js';
+import { pathDotPrefix } from '../utils/pathDotPrefix.js';
+import { resolveModule } from '../utils/resolveModule.js';
 import path from 'node:path';
-import { SOURCE_DIRNAME } from '../entities';
+import { SOURCE_DIRNAME } from '../entities.js';
 
 type ESLintConfig = Record<string, unknown>; // TODO
 

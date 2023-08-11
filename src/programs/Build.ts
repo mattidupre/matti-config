@@ -1,8 +1,8 @@
-import type { PackageInfo } from '../entities';
-import { createBuildCompleteMessage } from '../entities';
+import type { PackageInfo } from '../entities.js';
+import { createBuildCompleteMessage } from '../entities.js';
 import path from 'node:path';
-import { pathDotPrefix } from '../utils/pathDotPrefix';
-import { Program } from '../lib/Program';
+import { pathDotPrefix } from '../utils/pathDotPrefix.js';
+import { Program } from '../lib/Program.js';
 
 const EXTRA_FILES = ['.yml', '.yaml'];
 

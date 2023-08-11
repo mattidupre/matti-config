@@ -1,18 +1,13 @@
-/// <reference types="vitest" />
-/// <reference types="vitest/globals" />
+import 'vitest/globals';
 
 export interface CustomMatchers<R> extends Record<string, any> {
   toHaveBeenCalledAfter(
-    mock:
-      | jest.MockInstance<any, any[]>
-      | import('vitest').MockInstance<any, any[]>,
+    mock: import('vitest').MockInstance<any, any[]>,
     failIfNoFirstInvocation?: boolean,
   ): R;
 
   toHaveBeenCalledBefore(
-    mock:
-      | jest.MockInstance<any, any[]>
-      | import('vitest').MockInstance<any, any[]>,
+    mock: import('vitest').MockInstance<any, any[]>,
     failIfNoSecondInvocation?: boolean,
   ): R;
 

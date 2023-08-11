@@ -1,9 +1,9 @@
-import { DEFAULT_CONFIG_COMMENT, CONFIG_APP_NAME } from '../entities';
+import { DEFAULT_CONFIG_COMMENT, CONFIG_APP_NAME } from '../entities.js';
 import path from 'node:path';
 import _ from 'lodash';
 import fs from 'node:fs/promises';
 import { JsonObject, JsonValue } from 'type-fest';
-import { pathDotPrefix } from '../utils/pathDotPrefix';
+import { pathDotPrefix } from '../utils/pathDotPrefix.js';
 
 type FileContentArg<T> = T | FileContentCallback<T>;
 

@@ -1,8 +1,8 @@
 import fg from 'fast-glob';
 import path from 'node:path';
-import type { PackageInfo, RepoInfo } from '../entities';
+import type { PackageInfo, RepoInfo } from '../entities.js';
 import type { PackageJson } from 'type-fest';
-import { DIST_DIRNAME } from '../entities';
+import { DIST_DIRNAME } from '../entities.js';
 
 export const rootConfig = async ({ packageJson }: RepoInfo) => {
   const { type: _ } = packageJson;
