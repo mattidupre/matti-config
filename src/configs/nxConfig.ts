@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { defaultsDeep } from 'lodash';
+import _ from 'lodash';
 import { SOURCE_DIRNAME, type PackageInfo } from '../entities';
 
 export default (packageInfo: PackageInfo) => {
@@ -17,20 +17,20 @@ export default (packageInfo: PackageInfo) => {
     sourceRoot: path.join(SOURCE_DIRNAME, path.relative(rootDir, packageDir)),
     projectType: packageType === 'app' ? 'application' : packageType,
     targets: {
-      watch: defaultsDeep({}, defaultTarget, {
+      watch: _.defaultsDeep({}, defaultTarget, {
         options: {
           command: 'npx matti-config build --watch',
           parallel: true,
         },
       }),
-      build: defaultsDeep({}, defaultTarget, {
+      build: _.defaultsDeep({}, defaultTarget, {
         options: {
           command: 'npx matti-config build',
           parallel: true,
         },
         dependsOn: ['^build'],
       }),
-      debug: defaultsDeep({}, defaultTarget, {
+      debug: _.defaultsDeep({}, defaultTarget, {
         options: {
           command: 'npx matti-config debug',
         },

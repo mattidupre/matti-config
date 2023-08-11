@@ -1,0 +1,8 @@
+{
+  "prettier.prettierPath": "./node_modules/prettier",
+  "eslint.nodePath": "./node_modules",
+  "eslint.options": {
+    "resolvePluginsRelativeTo": "./node_modules",
+    "overrideConfigFile": ".eslintrc.cjs"
+  }
+}

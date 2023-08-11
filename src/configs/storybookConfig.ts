@@ -1,6 +1,7 @@
 import path from 'node:path';
 import { STORYBOOK_DIRNAME } from '../entities';
 import type { PackageInfo } from '../entities';
+import { resolveModule } from '../utils/resolveModule';
 import { mergeConfig } from 'vite';
 import viteConfig from './viteConfig';
 import type { StorybookViteConfig as StorybookConfig } from '@storybook/builder-vite';
@@ -21,12 +22,12 @@ export default (packageInfo: PackageInfo): StorybookConfig => {
           .filter(({ name }: { name: string }) => !name.startsWith('vite:')),
       ],
       // https://github.com/storybookjs/builder-vite/issues/55
-      root: path.dirname(require.resolve('@storybook/builder-vite')),
+      root: path.dirname(resolveModule('@storybook/builder-vite')),
     };
   });
 
   return {
-    core: { builder: require.resolve('@storybook/builder-vite') },
+    core: { builder: resolveModule('@storybook/builder-vite') },
     framework: '@storybook/react-vite',
     stories: [path.join(packageDir, '**/*.stories.@(ts|tsx)')],
     viteFinal: async (config) => mergeConfig(config, await viteConfigPromise),

@@ -2,7 +2,7 @@
 
 import type { ProgramType } from './entities';
 import { Program } from './lib/Program';
-import { pick } from 'lodash';
+import _ from 'lodash';
 import yargs from 'yargs';
 import { type ProgramInfo, PROGRAMS, PROGRAMS_OPTIONS } from './entities';
 
@@ -16,7 +16,7 @@ const getProgramInfo = (): ProgramInfo => {
       result = result.command(
         key,
         description,
-        pick(PROGRAMS_OPTIONS, acceptedOptions),
+        _.pick(PROGRAMS_OPTIONS, acceptedOptions),
       );
     },
   );

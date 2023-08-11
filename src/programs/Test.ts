@@ -1,5 +1,6 @@
 import type { PackageInfo } from '../entities';
 import path from 'node:path';
+import { pathDotPrefix } from '../utils/pathDotPrefix';
 import { Program } from '../lib/Program';
 
 export default class Test extends Program {
@@ -26,12 +27,15 @@ export default class Test extends Program {
     await this.scriptRunner.run('vitest', {
       args: [
         isWatchMode ? 'watch' : 'run',
-        `--config ${vitestConfigPath}`,
-        `--dir ${packageDir}`,
+        '--config',
+        pathDotPrefix(path.relative(this.scriptRunner.cwd, vitestConfigPath)),
+        `--dir ${pathDotPrefix(
+          path.relative(this.scriptRunner.cwd, packageDir),
+        )}`,
         `--passWithNoTests`,
         // ...testPaths,
       ],
-      cwd: packageDir,
+      // cwd: packageDir,
     });
   }
 }

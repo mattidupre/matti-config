@@ -1,5 +1,11 @@
-import type { PackageInfo, Environment, PackageTarget } from '../entities';
+import type {
+  PackageInfo,
+  RepoInfo,
+  Environment,
+  PackageTarget,
+} from '../entities';
 import { pathDotPrefix } from '../utils/pathDotPrefix';
+import { resolveModule } from '../utils/resolveModule';
 import path from 'node:path';
 import { SOURCE_DIRNAME } from '../entities';
 
@@ -25,6 +31,14 @@ const baseConfig = {
       rules: {
         'import/no-export': 'off',
       },
+    },
+    {
+      files: ['**/*.test.ts', '**/*.test.tsx'],
+      plugins: [
+        // TODO: https://github.com/jest-community/eslint-plugin-jest
+        // TODO: https://github.com/dangreenisrael/eslint-plugin-jest-formatting
+        'jest-extended',
+      ],
     },
   ],
   rules: {
@@ -102,49 +116,57 @@ const reactConfig = {
   ],
 };
 
-const globsByEnvironment: Record<Environment, [Array<string>, Array<string>]> =
-  {
-    dist: [
-      [`./${SOURCE_DIRNAME}/**/*.ts?(x)`],
-      [
-        `./${SOURCE_DIRNAME}/**/*.test.ts?(x)`,
-        `./${SOURCE_DIRNAME}/**/*.stories.ts?(x)`,
-      ],
+const globsByEnvironment: Record<
+  Environment,
+  { include: Array<string>; exclude: Array<string> }
+> = {
+  dist: {
+    include: [`./${SOURCE_DIRNAME}/**/*.ts?(x)`],
+    exclude: [
+      `./${SOURCE_DIRNAME}/**/*.test.ts?(x)`,
+      `./${SOURCE_DIRNAME}/**/*.stories.ts?(x)`,
     ],
-    test: [[`./${SOURCE_DIRNAME}/**/*.test.ts?(x)`], []],
-    stories: [[`./${SOURCE_DIRNAME}/**/*.stories.ts?(x)`], []],
-  };
+  },
+  test: {
+    include: [`./${SOURCE_DIRNAME}/**/*.test.ts?(x)`],
+    exclude: [],
+  },
+  stories: {
+    include: [`./${SOURCE_DIRNAME}/**/*.stories.ts?(x)`],
+    exclude: [],
+  },
+};
 
 const buildConfig = (target: PackageTarget, environment: Environment) => {
   if (target === 'node') {
     return {
       ...nodeConfig,
-      files: globsByEnvironment[environment][0],
-      excludedFiles: globsByEnvironment[environment][1],
+      files: globsByEnvironment[environment].include,
+      excludedFiles: globsByEnvironment[environment].exclude,
     };
   }
 
   if (target === 'universal') {
     return {
       ...universalConfig,
-      files: globsByEnvironment[environment][0],
-      excludedFiles: globsByEnvironment[environment][1],
+      files: globsByEnvironment[environment].include,
+      excludedFiles: globsByEnvironment[environment].exclude,
     };
   }
 
   if (target === 'browser') {
     return {
       ...browserConfig,
-      files: globsByEnvironment[environment][0],
-      excludedFiles: globsByEnvironment[environment][1],
+      files: globsByEnvironment[environment].include,
+      excludedFiles: globsByEnvironment[environment].exclude,
     };
   }
 
   if (target === 'react') {
     return {
       ...reactConfig,
-      files: globsByEnvironment[environment][0],
-      excludedFiles: globsByEnvironment[environment][1],
+      files: globsByEnvironment[environment].include,
+      excludedFiles: globsByEnvironment[environment].exclude,
     };
   }
 };
@@ -154,21 +176,14 @@ const patchConfig = (
   tsConfigPaths: Array<string>,
   config: any,
 ) => {
-  const cwd = configRootDir;
-
   // https://github.com/typescript-eslint/typescript-eslint/issues/2094
-
-  const tsConfigRelativePaths = tsConfigPaths;
-  // const tsConfigRelativePaths = tsConfigPaths.map((configPath) =>
-  //   pathDotPrefix(path.relative(cwd, configPath)),
-  // );
 
   return {
     ...config,
-    extends: config.extends.map((extend) => require.resolve(extend)),
-    parser: require.resolve('@typescript-eslint/parser'),
+    extends: config.extends.map((extend) => resolveModule(extend)),
+    parser: resolveModule('@typescript-eslint/parser'),
     parserOptions: {
-      project: tsConfigRelativePaths,
+      project: tsConfigPaths,
     },
     files: config.files.map((glob) =>
       pathDotPrefix(path.join(path.relative(rootDir, packageDir), glob)),
@@ -184,14 +199,16 @@ const patchConfig = (
         node: true,
         typescript: {
           alwaysTryTypes: true,
-          project: tsConfigRelativePaths,
+          project: tsConfigPaths,
         },
       },
     },
   };
 };
 
-export default (
+export const rootConfig = () => {};
+
+export const packageConfig = (
   packageInfo: PackageInfo,
   environment: Environment,
   tsConfigPaths: Array<string>,

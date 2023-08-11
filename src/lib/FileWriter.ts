@@ -1,6 +1,6 @@
-import { DEFAULT_CONFIG_COMMENT } from '../entities';
+import { DEFAULT_CONFIG_COMMENT, CONFIG_APP_NAME } from '../entities';
 import path from 'node:path';
-import { isFunction } from 'lodash';
+import _ from 'lodash';
 import fs from 'node:fs/promises';
 import { JsonObject, JsonValue } from 'type-fest';
 import { pathDotPrefix } from '../utils/pathDotPrefix';
@@ -29,6 +29,55 @@ type QueueFileOptions = {
 const JS_EXTENSIONS = ['.js', '.mjs', '.cjs'];
 const JSON_EXTENSIONS = ['.json', '.jsonc'];
 
+const renderObject = (obj: Record<string, any>, indent = 0) =>
+  `{\n${Object.keys(obj).reduce(
+    (str, [key, value]) =>
+      `${str}  ${new Array(indent + 1).join('  ')}${key}: ${
+        _.isObject(value)
+          ? renderObject(value, indent + 1)
+          : typeof value === 'string'
+          ? `'${value}'`
+          : value
+      },\n`,
+    '',
+  )}}`;
+
+const renderImport = (
+  importVarNames: string | Record<string, string>,
+  importPath: string,
+  isEsm: boolean,
+) => {
+  const importVarString =
+    typeof importVarNames === 'string'
+      ? importVarNames
+      : `{${Object.keys(importVarNames).reduce((str, [key, value]) => {
+          return `${str}  ${key}${isEsm ? ' as ' : ': '}${value},\n`;
+        }, '')}}`;
+  return isEsm
+    ? `import ${importVarString} from '${importPath}';`
+    : `const ${importVarString} = require('${importPath}');`;
+};
+
+const renderExports = (
+  exportStrings: string | Record<string, string>,
+  isEsm: boolean,
+) => {
+  if (typeof exportStrings === 'string') {
+    return isEsm
+      ? `export default ${exportStrings};`
+      : `module.exports = ${exportStrings};`;
+  }
+  if (isEsm) {
+    return Object.keys(exportStrings)
+      .reduce(
+        (arr, [key, value]) => [...arr, `export const ${key} = ${value};`],
+        [],
+      )
+      .join('\n');
+  }
+  return `module.exports = ${renderObject(exportStrings)}`;
+};
+
 export class FileWriter {
   private filesQueue: FilesQueue;
 
@@ -52,31 +101,21 @@ export class FileWriter {
     return this.queueFile(filePath, fileContent, fileOptions);
   }
 
-  public queueJsObject(
-    filePath: string,
-    fileContent: FileContentArg<JsonValue>,
-    fileOptions: QueueFileOptions = {},
-  ) {
-    this.checkExtension(JS_EXTENSIONS, filePath);
-    return this.queueFile(
-      filePath,
-      fileContent,
-      fileOptions,
-      (content) => `module.exports = ${JSON.stringify(content, null, 2)};`,
-    );
-  }
-
   public queueJsConfig(
     filePath: string,
     fileContent: FileContentArg<string>,
     fileOptions: QueueFileOptions & {
       basePath?: string;
-      exportObject?: boolean;
-    } = {},
+      esm: boolean;
+      exportType?: 'function' | 'object' | 'none';
+    },
   ) {
-    const { basePath = path.dirname(filePath), exportObject = false } =
-      fileOptions;
-    this.checkExtension(JS_EXTENSIONS, filePath);
+    const {
+      basePath = path.dirname(filePath),
+      exportType = 'none',
+      esm: isEsm = true,
+    } = fileOptions;
+    this.checkExtension(JS_EXTENSIONS, filePath, isEsm);
     const packageInfoPath = pathDotPrefix(
       path.join(
         path.relative(path.dirname(filePath), basePath),
@@ -84,13 +123,51 @@ export class FileWriter {
         `package-info${path.extname(filePath)}`,
       ),
     );
-    return this.queueFile(filePath, fileContent, fileOptions, (configName) => [
-      `const { ${configName} } = require('matti-config');`,
-      `const packageInfo = require('${packageInfoPath}');`,
-      `module.exports = ${
-        exportObject ? '' : '() => '
-      }${configName}(packageInfo);`,
-    ]);
+
+    return this.queueFile(filePath, fileContent, fileOptions, (configName) => {
+      const configImport = renderImport(
+        configName,
+        `${CONFIG_APP_NAME}/configs/${configName}`,
+        isEsm,
+      );
+      const infoImport = renderImport('packageInfo', packageInfoPath, isEsm);
+
+      switch (exportType) {
+        case 'none': {
+          return [configImport];
+        }
+        case 'function': {
+          return [
+            configImport,
+            infoImport,
+            renderExports(`() => ${configName}(packageInfo)`, isEsm),
+          ];
+        }
+        case 'object': {
+          return [
+            configImport,
+            infoImport,
+            renderExports(`${configName}(packageInfo)`, isEsm),
+          ];
+        }
+        default: {
+          throw new Error(`Invalid exportType "${exportType}".`);
+        }
+      }
+    });
+  }
+
+  public queueJsObject(
+    filePath: string,
+    fileContent: FileContentArg<JsonValue>,
+    fileOptions: QueueFileOptions & {
+      esm: boolean;
+    },
+  ) {
+    this.checkExtension(JS_EXTENSIONS, filePath);
+    return this.queueFile(filePath, fileContent, fileOptions, (content) =>
+      renderExports(JSON.stringify(content, null, 2), fileOptions.esm),
+    );
   }
 
   public queueJson(
@@ -125,7 +202,7 @@ export class FileWriter {
       comments: fileOptions.comments ?? true,
     };
 
-    const buildFileContent = isFunction(fileContentArg)
+    const buildFileContent = _.isFunction(fileContentArg)
       ? (filesQueue) =>
           this.toContentArray(callback(fileContentArg(filesQueue)))
       : () => this.toContentArray(callback(fileContentArg));
@@ -199,10 +276,24 @@ export class FileWriter {
     throw new Error('Unrecognized input type.');
   }
 
-  private checkExtension(extension: string | Array<string>, filePath: string) {
-    const extensions = [].concat(extension);
-    if (extensions.every((ext) => !filePath.endsWith(ext))) {
-      throw new Error(`File path must end with "${extensions.join(' or ')}".`);
+  private checkExtension(
+    extensions: string | Array<string>,
+    filePath: string,
+    isEsm?: boolean,
+  ) {
+    const extensionsArr = [].concat(extensions);
+    const extension = extensionsArr.find((ext) => filePath.endsWith(ext));
+    if (isEsm === true && extension === '.cjs') {
+      throw new Error(`Cannot export ESM to .cjs file.`);
     }
+    if (isEsm === false && extension === '.mjs') {
+      throw new Error(`Cannot export non-ESM to .mjs file.`);
+    }
+    if (!extension) {
+      throw new Error(
+        `File path must end with "${extensionsArr.join(' or ')}".`,
+      );
+    }
+    return extension;
   }
 }

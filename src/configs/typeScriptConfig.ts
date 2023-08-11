@@ -1,6 +1,10 @@
 import { pathDotPrefix } from '../utils/pathDotPrefix';
 import path from 'node:path';
-import { RESOLVE_ALIASES } from '../entities';
+import {
+  RESOLVE_ALIASES,
+  CONFIG_APP_DIST_DIR,
+  CONFIG_APP_ROOT_DIR,
+} from '../entities';
 import type { Environment, PackageTarget, PackageInfo } from '../entities';
 import { TsConfigJson } from 'type-fest';
 
@@ -27,22 +31,24 @@ const optionsByEnvironment: Record<
   Environment,
   TsConfigJson['compilerOptions']
 > = {
-  dist: { strict: true, noImplicitAny: true },
-  test: { strict: false, noImplicitAny: false },
-  stories: { strict: false, noImplicitAny: true },
+  dist: { strict: true },
+  test: { strict: true, noImplicitAny: false },
+  stories: { strict: true, strictNullChecks: false },
 };
 
 const baseTypes = ['@modyfi/vite-plugin-yaml/modules'];
 
 const localTypesByEnvironment: Record<Environment, Array<string>> = {
   dist: [],
-  test: [path.join(__dirname, 'vitestSetup.d.ts')],
+  test: [path.join(CONFIG_APP_DIST_DIR, 'configs', 'vitestTypes.d.ts')],
   stories: [],
 };
 
 const typesByEnvironment: Record<Environment, Array<string>> = {
   dist: ['vite/client'],
-  test: [],
+  test: [
+    // 'vitest/globals'
+  ],
   stories: [],
 };
 

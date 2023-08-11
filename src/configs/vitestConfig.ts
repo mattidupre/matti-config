@@ -1,16 +1,33 @@
-import { mergeConfig } from 'vite';
-import { defineConfig } from 'vitest/config';
-import type { PackageInfo } from '../entities';
+import { defineConfig, mergeConfig } from 'vitest/config';
+import { type PackageInfo, CONFIG_APP_CONFIGS_EXTNAME } from '../entities';
+import path from 'node:path';
 import viteConfig from './viteConfig';
+import { pathDotPrefix } from '../utils/pathDotPrefix';
 
 export default async (packageInfo: PackageInfo) => {
-  const vitestSetup = require.resolve('./vitestSetup');
+  const { target, cacheDir, packageJsExtension, packageDir } = packageInfo;
 
-  const { target } = packageInfo;
+  const vitestSetup = pathDotPrefix(
+    path.join(
+      path.relative(packageDir, cacheDir),
+      `vitestSetup${packageJsExtension}`,
+    ),
+  );
 
   const extensions = target === 'react' ? ['ts', 'tsx'] : ['ts'];
   const extensionsString =
     extensions.length === 1 ? extensions[0] : `{${extensions.join(',')}}`;
+
+  console
+    .log
+
+    // 'HERE: ',
+    // vitestSetup,
+    // '\n',
+    // process.cwd(),
+    // '\n',
+    // require.resolve('./vitestSetup'),
+    ();
 
   return mergeConfig(
     await viteConfig(packageInfo),

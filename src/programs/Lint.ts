@@ -22,9 +22,7 @@ export default class Lint extends Program {
       cwd,
       args: [
         '--config',
-        pathDotPrefix(
-          path.relative(cwd, path.join(rootDir, `.eslintrc${rootJsExtension}`)),
-        ),
+        pathDotPrefix(path.relative(cwd, path.join(rootDir, `.eslintrc.cjs`))),
         '--resolve-plugins-relative-to',
         configRootDir,
         '--no-error-on-unmatched-pattern',

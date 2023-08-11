@@ -1,11 +1,13 @@
 import { Program } from '../lib/Program';
 import typeScriptConfig from '../configs/typeScriptConfig';
-import esLintConfig from '../configs/esLintConfig';
+import * as esLintConfig from '../configs/esLintConfig';
+import * as vsCodeConfig from '../configs/vsCodeConfig';
 import nxConfig from '../configs/nxConfig';
 import prettierConfig from '../configs/prettierConfig';
-import packageJsonConfig from '../configs/packageJsonConfig';
+import * as packageJsonConfig from '../configs/packageJsonConfig';
 import { pathDotPrefix } from '../utils/pathDotPrefix';
 import path from 'node:path';
+import _ from 'lodash';
 import { PackageInfo, RepoInfo } from '../entities';
 
 // TODO: .gitignore
@@ -15,6 +17,8 @@ import { PackageInfo, RepoInfo } from '../entities';
 // {
 //   "eslint.nodePath": require.resolve("eslint")
 // }
+
+// TODO: Tell VS Code to use matti-config prettier
 
 export default class Configure extends Program {
   public async run() {
@@ -27,7 +31,7 @@ export default class Configure extends Program {
   }
 
   private async configureRoot(repoInfo: RepoInfo) {
-    const { rootDir, rootJsExtension } = repoInfo;
+    const { rootDir } = repoInfo;
     const [packagesInfoArr] = await Promise.all([
       this.withIterator(
         () => this.getActivePackageDirsIterator(),
@@ -35,6 +39,20 @@ export default class Configure extends Program {
         this,
       ),
     ]);
+
+    this.fileWriter.queueJson(
+      path.join(rootDir, 'package.json'),
+      await packageJsonConfig.rootConfig(repoInfo),
+    );
+
+    const vsCodeConfigPath = path.join(rootDir, '.vscode', 'settings.json');
+    this.fileWriter.queueJson(
+      vsCodeConfigPath,
+      _.defaultsDeep(
+        vsCodeConfig.rootConfig(repoInfo),
+        (await this.fileReader.readJson(vsCodeConfigPath)) ?? {},
+      ),
+    );
 
     this.fileWriter.queueJson(
       path.join(rootDir, 'tsconfig.json'),
@@ -48,18 +66,18 @@ export default class Configure extends Program {
     );
 
     this.fileWriter.queueJsCode(
-      path.join(rootDir, `.eslintrc${rootJsExtension}`),
+      path.join(rootDir, `.eslintrc.cjs`),
       Configure.esLintEntry(
         rootDir,
-        packagesInfoArr.map(({ cacheDir, packageJsExtension }) =>
-          path.join(cacheDir, `.eslintrc-package${packageJsExtension}`),
+        packagesInfoArr.map(({ cacheDir }) =>
+          path.join(cacheDir, `.eslintrc-package.cjs`),
         ),
         true,
       ),
     );
 
-    this.fileWriter.queueJsObject(
-      path.join(rootDir, `.prettierrc${rootJsExtension}`),
+    this.fileWriter.queueJson(
+      path.join(rootDir, `.prettierrc.json`),
       prettierConfig(),
     );
   }
@@ -77,7 +95,7 @@ export default class Configure extends Program {
 
     this.fileWriter.queueJson(
       path.join(packageDir, 'package.json'),
-      await packageJsonConfig(packageInfo),
+      await packageJsonConfig.packageConfig(packageInfo),
       { comments: false },
     );
 
@@ -92,6 +110,7 @@ export default class Configure extends Program {
     this.fileWriter.queueJsObject(
       path.join(cacheDir, `package-info${packageJsExtension}`),
       packageInfo,
+      { esm: true },
     );
 
     // Add a tsconfig.json file to the package root for Vite.
@@ -123,16 +142,6 @@ export default class Configure extends Program {
       { comments: true },
     );
 
-    this.fileWriter.queueJsCode(
-      path.join(cacheDir, `.eslintrc-package${packageJsExtension}`),
-      Configure.esLintEntry(
-        cacheDir,
-        environments.map((environment) =>
-          path.join(cacheDir, `.eslintrc-${environment}${packageJsExtension}`),
-        ),
-      ),
-    );
-
     environments.forEach((environment) => {
       this.fileWriter.queueJson(
         path.join(cacheDir, `tsconfig-${environment}.json`),
@@ -146,9 +155,19 @@ export default class Configure extends Program {
       );
     });
 
+    this.fileWriter.queueJsCode(
+      path.join(cacheDir, `.eslintrc-package.cjs`),
+      Configure.esLintEntry(
+        cacheDir,
+        environments.map((environment) =>
+          path.join(cacheDir, `.eslintrc-${environment}.cjs`),
+        ),
+      ),
+    );
+
     environments.forEach((environment) => {
       this.fileWriter.queueJsObject(
-        path.join(cacheDir, `.eslintrc-${environment}${packageJsExtension}`),
+        path.join(cacheDir, `.eslintrc-${environment}.cjs`),
         (filesQueue) => {
           // Get all tsConfig files to pass to typescript-eslint parserOptions.
           //   see https://github.com/typescript-eslint/typescript-eslint/issues/2094
@@ -160,31 +179,45 @@ export default class Configure extends Program {
             )
             .map(([filePath]) => filePath);
 
-          return esLintConfig(packageInfo, environment, tsConfigPaths) as any;
+          return esLintConfig.packageConfig(
+            packageInfo,
+            environment,
+            tsConfigPaths,
+          ) as any;
         },
+        { esm: false },
       );
     });
 
     this.fileWriter.queueJsConfig(
-      path.join(cacheDir, `vite.config${packageJsExtension}`),
+      path.join(cacheDir, `vite.config.mjs`),
       'viteConfig',
+      { basePath: cacheDir, exportType: 'function', esm: true },
     );
 
     this.fileWriter.queueJsConfig(
-      path.join(cacheDir, `rollup.config${packageJsExtension}`),
+      path.join(cacheDir, `rollup.config.mjs`),
       'rollupConfig',
+      { basePath: cacheDir, exportType: 'function', esm: true },
     );
 
     this.fileWriter.queueJsConfig(
-      path.join(cacheDir, `vitest.config${packageJsExtension}`),
+      path.join(cacheDir, `vitest.config.mjs`),
       'vitestConfig',
+      { basePath: cacheDir, exportType: 'function', esm: true },
+    );
+
+    this.fileWriter.queueJsConfig(
+      path.join(cacheDir, `vitestSetup.mjs`),
+      'vitestSetup',
+      { basePath: cacheDir, exportType: 'none', esm: true },
     );
 
     if (packageConfig.storybook) {
       this.fileWriter.queueJsConfig(
-        path.join(cacheDir, '.storybook', `main${packageJsExtension}`),
+        path.join(cacheDir, '.storybook', `main.mjs`),
         'storybookConfig',
-        { basePath: cacheDir, exportObject: true },
+        { basePath: cacheDir, exportType: 'object', esm: true },
       );
     }
   }

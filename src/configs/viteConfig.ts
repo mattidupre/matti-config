@@ -10,6 +10,7 @@ import { ImageLoader as VanillaExtractImageLoader } from 'esbuild-vanilla-image-
 import type { PackageInfo, PackageTarget, PackageType } from '../entities';
 import type { UserConfig as ViteConfig } from 'vite';
 import { SOURCE_DIRNAME, DIST_DIRNAME } from '../entities';
+import tsconfigPaths from 'vite-tsconfig-paths';
 
 // TODO: See https://www.npmjs.com/package/vite-node
 // TODO: See https://www.npmjs.com/package/vite-plugin-node
@@ -93,6 +94,9 @@ export default async ({
     // assetsInclude: ['**/*.woff2'],
     plugins: [
       ViteYaml(),
+      // tsconfigPaths({
+      //   root: packageDir,
+      // }),
       ...(isLibrary
         ? [
             // dts({

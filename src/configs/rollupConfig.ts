@@ -8,7 +8,6 @@ import commonjs from '@rollup/plugin-commonjs';
 import yaml from '@rollup/plugin-yaml';
 import alias from '@rollup/plugin-alias';
 import { RESOLVE_ALIASES } from '../entities';
-import packageJsonConfig from './packageJsonConfig';
 
 export default (packageInfo: PackageInfo): RollupOptions => {
   const { sourceDir, distDir, cacheDir, packageDir, packageJson } = packageInfo;

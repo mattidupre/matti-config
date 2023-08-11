@@ -1,5 +1,5 @@
 import execSh from 'exec-sh';
-import terminate from 'terminate/promise';
+import terminate from 'terminate';
 import { spawn, ChildProcess } from 'node:child_process';
 import { Writable } from 'node:stream';
 

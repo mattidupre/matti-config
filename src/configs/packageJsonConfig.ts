@@ -1,14 +1,25 @@
 import fg from 'fast-glob';
 import path from 'node:path';
-import type { PackageInfo } from '../entities';
+import type { PackageInfo, RepoInfo } from '../entities';
 import type { PackageJson } from 'type-fest';
 import { DIST_DIRNAME } from '../entities';
 
-export default async (packageInfo: PackageInfo): Promise<PackageJson> => {
+export const rootConfig = async ({ packageJson }: RepoInfo) => {
+  const { type: _ } = packageJson;
+  return {
+    type: 'module',
+    ...packageJson,
+  };
+};
+
+export const packageConfig = async (
+  packageInfo: PackageInfo,
+): Promise<PackageJson> => {
   const { sourceDir, packageJson, packageType, target } = packageInfo;
   const {
     name,
     version,
+    type: moduleType,
     bin,
     main,
     scripts,

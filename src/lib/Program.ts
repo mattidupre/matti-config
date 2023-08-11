@@ -1,4 +1,9 @@
-import type { ProgramInfo, PackageInfo, RepoInfo } from '../entities';
+import {
+  type ProgramInfo,
+  type PackageInfo,
+  type RepoInfo,
+  CONFIG_APP_CONFIGS_EXTNAME,
+} from '../entities';
 import path from 'node:path';
 import { WorkspacesNavigator } from '../utils/WorkspacesNavigator';
 import { FileReader } from './FileReader';
@@ -40,8 +45,9 @@ export class Program {
   }
 
   public static async import(programInfo: ProgramInfo) {
-    const { default: SomeClass } = await require(PROGRAMS[programInfo.program]
-      .scriptPath);
+    const { default: SomeClass } = await import(
+      `${PROGRAMS[programInfo.program].scriptPath}${CONFIG_APP_CONFIGS_EXTNAME}`
+    );
     const instance = new SomeClass(programInfo) as InstanceType<typeof Program>;
     return instance.run();
   }
@@ -57,13 +63,16 @@ export class Program {
       this.workspacesNavigator.getIsMonorepo(),
     ]);
 
+    const packageJson = await this.fileReader.readPackageJson(rootDir);
+
     return {
       cwd: this.cwd,
       rootDir,
+      packageJson,
       configRootDir: CONFIG_APP_ROOT_DIR,
       configsDir: CONFIG_APP_CONFIGS_DIR,
       isMonorepo,
-      rootJsExtension: '.js',
+      rootJsExtension: CONFIG_APP_CONFIGS_EXTNAME,
     };
   }
 
@@ -89,7 +98,7 @@ export class Program {
       'test',
       ...(isPackageFrontend ? (['stories'] as const) : ([] as const)),
     ];
-    const packageJsExtension = '.cjs';
+    const packageJsExtension = CONFIG_APP_CONFIGS_EXTNAME;
 
     return {
       ...repoInfo,
