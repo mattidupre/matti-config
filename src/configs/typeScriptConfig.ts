@@ -1,12 +1,12 @@
-import { pathDotPrefix } from '../utils/pathDotPrefix.js';
 import path from 'node:path';
+import { TsConfigJson } from 'type-fest';
+import { pathDotPrefix } from '../utils/pathDotPrefix.js';
 import {
   RESOLVE_ALIASES,
   CONFIG_APP_DIST_DIR,
   CONFIG_APP_ROOT_DIR,
 } from '../entities.js';
 import type { Environment, PackageTarget, PackageInfo } from '../entities.js';
-import { TsConfigJson } from 'type-fest';
 
 // https://github.com/dominikg/tsconfck
 
@@ -34,6 +34,22 @@ const optionsByEnvironment: Record<
   dist: { strict: true },
   test: { strict: true, noImplicitAny: false },
   stories: { strict: true, strictNullChecks: false },
+};
+
+const basePaths: TsConfigJson['compilerOptions']['paths'] = {
+  tslib: [path.join(CONFIG_APP_ROOT_DIR, 'node_modules', 'tslib')],
+  ...Object.fromEntries(RESOLVE_ALIASES.map(([from, to]) => [from, [to]])),
+};
+
+const pathsByEnvironment: Record<
+  Environment,
+  TsConfigJson['compilerOptions']['paths']
+> = {
+  dist: {},
+  test: {
+    vitest: [path.join(CONFIG_APP_ROOT_DIR, 'node_modules', 'vitest')],
+  },
+  stories: {},
 };
 
 const baseTypes = ['@modyfi/vite-plugin-yaml/modules'];
@@ -83,7 +99,7 @@ const extensionsByTarget: Record<PackageTarget, Array<string>> = {
   universal: ['.ts'],
 };
 
-const pathsByEnvironment: Record<Environment, [string, null | string]> = {
+const dirsByEnvironment: Record<Environment, [string, null | string]> = {
   dist: ['./src', './dist'],
   test: ['./src', null],
   stories: ['./src', null],
@@ -98,29 +114,30 @@ const globsByEnvironment: Record<Environment, [Array<string>, Array<string>]> =
   };
 
 export default (
-  { target, rootDir, cacheDir, configRootDir, packageDir }: PackageInfo,
+  { target, cacheDir, configRootDir, packageDir }: PackageInfo,
   environment: Environment,
 ) => {
   const baseDir = path.relative(cacheDir, packageDir);
 
   // const pathRelative = (targetPath: string) =>
   //   pathDotPrefix(path.relative(packageDir, targetPath));
-  const [srcDir, distDir] = pathsByEnvironment[environment];
+  const [srcDir, distDir] = dirsByEnvironment[environment] ?? [];
 
-  const [include, exclude] = globsByEnvironment[environment].map((globs) =>
-    globs.map(
-      (glob) => path.join(baseDir, glob),
-      // extensionsByTarget[target].map(
-      //   (extension) => `${path.join(baseDir, glob)}${extension}`,
-      // ),
-    ),
+  const [include, exclude] = (globsByEnvironment[environment] ?? []).map(
+    (globs) =>
+      globs.map(
+        (glob) => path.join(baseDir, glob),
+        // extensionsByTarget[target].map(
+        //   (extension) => `${path.join(baseDir, glob)}${extension}`,
+        // ),
+      ),
   );
 
   return {
     compilerOptions: {
       ...baseCompilerOptions,
-      ...optionsByEnvironment[environment],
-      ...optionsByTarget[target],
+      ...(optionsByEnvironment[environment] ?? {}),
+      ...(optionsByTarget[target] ?? {}),
       baseUrl: baseDir,
       rootDir: pathDotPrefix(path.join(baseDir, srcDir)),
       outDir: distDir ? pathDotPrefix(path.join(baseDir, distDir)) : undefined,
@@ -130,16 +147,14 @@ export default (
           )
         : undefined,
       paths: {
-        tslib: [path.join(configRootDir, 'node_modules', 'tslib')],
-        ...Object.fromEntries(
-          RESOLVE_ALIASES.map(([from, to]) => [from, [to]]),
-        ),
+        ...basePaths,
+        ...(pathsByEnvironment[environment] ?? {}),
       },
       types: [
-        ...localTypesByEnvironment[environment],
+        ...(localTypesByEnvironment[environment] ?? []),
         ...[
           ...baseTypes,
-          ...typesByEnvironment[environment],
+          ...(typesByEnvironment[environment] ?? []),
           ...typesByTarget[target],
         ].map((t) => path.join(configRootDir, 'node_modules', t)),
       ],

@@ -1,12 +1,7 @@
-import type {
-  PackageInfo,
-  RepoInfo,
-  Environment,
-  PackageTarget,
-} from '../entities.js';
+import path from 'node:path';
+import type { PackageInfo, Environment, PackageTarget } from '../entities.js';
 import { pathDotPrefix } from '../utils/pathDotPrefix.js';
 import { resolveModule } from '../utils/resolveModule.js';
-import path from 'node:path';
 import { SOURCE_DIRNAME } from '../entities.js';
 
 type ESLintConfig = Record<string, unknown>; // TODO

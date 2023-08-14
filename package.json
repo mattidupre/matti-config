@@ -16,8 +16,7 @@
     }
   },
   "scripts": {
-    "build": "rm -rf dist/* ||: && rollup -c --no-watch.clearScreen",
-    "build2": "rm -rf dist/* ||: && tsc --project tsconfig.json --declaration",
+    "build": "rm -rf dist/* ||: && tsc --project tsconfig.json --declaration",
     "dev": "pnpm run build --watch"
   },
   "dependencies": {
