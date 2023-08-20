@@ -82,6 +82,11 @@ export const PROGRAMS: Record<
     scriptPath: path.join(CONFIG_APP_DIST_DIR, 'programs/Configure'),
     acceptedOptions: ['root'],
   },
+  link: {
+    description: 'Link matching repos from parent folder.',
+    scriptPath: path.join(CONFIG_APP_DIST_DIR, 'programs/Link'),
+    acceptedOptions: ['root'],
+  },
   build: {
     description: 'Build the package.',
     scriptPath: path.join(CONFIG_APP_DIST_DIR, 'programs/Build'),
@@ -164,6 +169,7 @@ export type ProgramInfo = {
   isExecuteRoot: boolean;
   isExecuteAll: boolean;
   isHard: boolean;
+  extraArgs: ReadonlyArray<string>;
 };
 
 export type RepoInfo = {

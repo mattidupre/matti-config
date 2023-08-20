@@ -1,8 +1,9 @@
 import path from 'node:path';
 import fs from 'node:fs';
-import type { PackageConfig } from '../entities.js';
+import { jsonc } from 'jsonc';
+import { type JsonObject, type PackageJson } from 'type-fest';
+import { type PackageConfig } from '../entities.js';
 import { CONFIG_FILENAME, PackageConfigSchema } from '../entities.js';
-import type { JsonObject, PackageJson } from 'type-fest';
 
 export class FileReader {
   /**
@@ -15,7 +16,7 @@ export class FileReader {
       return Promise.resolve(undefined);
     }
     const fileString = await fs.promises.readFile(absolutePath);
-    const fileData = JSON.parse(String(fileString));
+    const fileData = jsonc.parse(String(fileString));
     return fileData as TypeT;
   }
 

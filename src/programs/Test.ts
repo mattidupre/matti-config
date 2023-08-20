@@ -1,5 +1,5 @@
-import type { PackageInfo } from '../entities.js';
 import path from 'node:path';
+import type { PackageInfo } from '../entities.js';
 import { pathDotPrefix } from '../utils/pathDotPrefix.js';
 import { Program } from '../lib/Program.js';
 
@@ -15,7 +15,7 @@ export default class Test extends Program {
     cacheDir,
     packageJsExtension,
   }: PackageInfo) {
-    const { isWatchMode } = this.programInfo;
+    const { isWatchMode, extraArgs } = this.programInfo;
 
     const vitestConfigPath = path.join(
       cacheDir,
@@ -33,9 +33,9 @@ export default class Test extends Program {
           path.relative(this.scriptRunner.cwd, packageDir),
         )}`,
         `--passWithNoTests`,
-        // ...testPaths,
+        ...extraArgs,
       ],
-      // cwd: packageDir,
+      forceColor: true,
     });
   }
 }

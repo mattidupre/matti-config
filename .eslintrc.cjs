@@ -22,6 +22,13 @@ module.exports = {
         project: ['./tsconfig.json'],
       },
       parser: '@typescript-eslint/parser',
+      rules: {
+        'import/prefer-default-export': 'off',
+        'class-methods-use-this': 'off',
+        'import/order': 'off',
+        'max-classes-per-file': 'off',
+        'no-restricted-syntax': 'off',
+      },
     },
   ],
 };

@@ -1,5 +1,5 @@
-import path from 'node:path';
 import fs from 'node:fs';
+import { jsonc } from 'jsonc';
 
 export const readJson = async <TypeT>(
   absolutePath: string,
@@ -8,7 +8,7 @@ export const readJson = async <TypeT>(
     return Promise.resolve(undefined);
   }
   const fileString = await fs.promises.readFile(absolutePath);
-  const fileData = JSON.parse(String(fileString));
+  const fileData = jsonc.parse(String(fileString));
 
   return fileData as TypeT;
 };

@@ -158,6 +158,10 @@ export default (
           ...typesByTarget[target],
         ].map((t) => path.join(configRootDir, 'node_modules', t)),
       ],
+      declarationMap: true,
+    },
+    'tsc-alias': {
+      resolveFullPaths: true,
     },
     include,
     exclude,

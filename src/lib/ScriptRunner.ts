@@ -1,12 +1,12 @@
-import execSh from 'exec-sh';
 import terminate from 'terminate';
-import { spawn, ChildProcess } from 'node:child_process';
-import { Writable } from 'node:stream';
+import { spawn } from 'node:child_process';
 
 type Options = {
   args?: Array<string>;
   cwd?: string;
   onOutput?: (message: string) => void;
+  forceColor?: boolean;
+  skipNpx?: boolean;
 };
 
 export class ScriptRunner {
@@ -20,10 +20,17 @@ export class ScriptRunner {
     process.on('SIGINT', this.terminate);
   }
 
-  async run(script: string, { args = [], cwd, onOutput }: Options = {}) {
-    const argStrings = args.map((arg) => arg.toString());
+  async run(
+    script: string,
+    { args = [], cwd, onOutput, forceColor, skipNpx }: Options = {},
+  ) {
+    const [scriptBase, ...argStrings] = [
+      ...(skipNpx ? [script] : ['npx', script]),
+      ...(forceColor ? ['--color', 'always'] : []),
+      ...args.map((arg) => arg.toString()),
+    ];
 
-    return new Promise<void>(async (resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
       let isResolved = false;
 
       const handleError = (err: Error) => {
@@ -45,10 +52,8 @@ export class ScriptRunner {
         onOutput?.(data.toString());
       };
 
-      let child: ChildProcess;
-
       try {
-        child = spawn('npx', [script, ...argStrings], {
+        const child = spawn(scriptBase, argStrings, {
           shell: true,
           cwd: cwd ?? this.cwd,
         });

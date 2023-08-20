@@ -1,11 +1,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { Transform, Readable } from 'node:stream';
+import { Transform } from 'node:stream';
 import fg from 'fast-glob';
 import type { PackageJson } from 'type-fest';
 import { Memoize } from 'typescript-memoize';
-import { readJson } from '../lib/readJson.js';
-import { readYaml } from '../lib/readYaml.js';
+import { readJson } from '../../lib/readJson.js';
+import { readYaml } from '../../lib/readYaml.js';
+import { StreamMemoizer } from './StreamMemoizer.js';
 import { stream } from 'event-iterator';
 
 export type WorkspaceInfo = {
@@ -19,7 +20,7 @@ export type WorkspaceInfo = {
 
 // TODO: Rename "package" terminology to "workspace".
 
-const generateParentPackageDirs = function* (initialDir: string) {
+function* generateParentPackageDirs(initialDir: string) {
   let prevDir: string;
   let thisDir = initialDir;
   while (thisDir !== prevDir) {
@@ -29,7 +30,7 @@ const generateParentPackageDirs = function* (initialDir: string) {
     prevDir = thisDir;
     thisDir = path.normalize(path.join(thisDir, '..'));
   }
-};
+}
 
 const parseWorkspaces = (
   workspaces: PackageJson['workspaces'],
@@ -38,6 +39,7 @@ const parseWorkspaces = (
 
 export class WorkspacesNavigator {
   private readonly cwd: string;
+
   private streamMemoizer: StreamMemoizer;
 
   constructor(cwd: string = process.cwd()) {
@@ -63,6 +65,7 @@ export class WorkspacesNavigator {
 
     for (const thisPackageDir of generateParentPackageDirs(this.cwd)) {
       firstPackageDir = thisPackageDir;
+      // eslint-disable-next-line no-await-in-loop
       if (await WorkspacesNavigator.readWorkspaces(thisPackageDir)) {
         return thisPackageDir;
       }
@@ -85,7 +88,7 @@ export class WorkspacesNavigator {
    */
   @Memoize()
   private async getWorkspaces(): Promise<PackageJson['workspaces']> {
-    return await WorkspacesNavigator.readWorkspaces(await this.getRootDir());
+    return WorkspacesNavigator.readWorkspaces(await this.getRootDir());
   }
 
   /**
@@ -96,7 +99,7 @@ export class WorkspacesNavigator {
     workspaceName: string,
   ): Promise<undefined | string> {
     if (workspaceName === 'root') {
-      return await this.getRootDir();
+      return this.getRootDir();
     }
 
     for await (const dir of await this.getWorkspaceDirsIterator()) {
@@ -159,45 +162,5 @@ export class WorkspacesNavigator {
     return readYaml<{ packages: Array<string> }>(
       path.join(absolutePackagePath, 'pnpm-workspace.yaml'),
     );
-  }
-}
-
-class StreamMemoizer {
-  createStream: () => NodeJS.ReadableStream | Promise<NodeJS.ReadableStream>;
-  stream: Promise<NodeJS.ReadableStream>;
-  values: Array<unknown> = [];
-  isStreamClosed = false;
-
-  constructor(createStream: StreamMemoizer['createStream']) {
-    this.createStream = createStream;
-  }
-
-  async get() {
-    if (!this.stream) {
-      this.stream = Promise.resolve(this.createStream());
-      const stream = await this.stream;
-      stream.on('data', (v) => {
-        this.values.push(v);
-      });
-      stream.on('close', () => {
-        this.isStreamClosed = true;
-      });
-    }
-
-    const stream = await this.stream;
-    const readableStream = new Readable({
-      objectMode: true,
-    });
-    readableStream._read = () => {};
-    this.values.forEach((v) => {
-      readableStream.push(v);
-    });
-    if (this.isStreamClosed) {
-      readableStream.push(null);
-    } else {
-      stream.on('data', (v) => readableStream.push(v));
-      stream.on('end', () => readableStream.push(null));
-    }
-    return readableStream;
   }
 }

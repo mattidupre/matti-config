@@ -5,7 +5,7 @@ import {
   CONFIG_APP_CONFIGS_EXTNAME,
 } from '../entities.js';
 import path from 'node:path';
-import { WorkspacesNavigator } from '../utils/WorkspacesNavigator.js';
+import { WorkspacesNavigator } from '../utils/WorkspacesNavigator/index.js';
 import { FileReader } from './FileReader.js';
 import { FileWriter } from './FileWriter.js';
 import { FileManager } from './FileManager.js';
@@ -23,12 +23,19 @@ import { Memoize } from 'typescript-memoize';
 
 export class Program {
   protected readonly programInfo: ProgramInfo;
+
   protected readonly cwd: string;
+
   protected readonly programName: keyof typeof PROGRAMS;
+
   protected readonly fileReader: InstanceType<typeof FileReader>;
+
   protected readonly fileWriter: InstanceType<typeof FileWriter>;
+
   protected readonly fileManager: InstanceType<typeof FileManager>;
+
   protected readonly scriptRunner: InstanceType<typeof ScriptRunner>;
+
   private readonly workspacesNavigator: InstanceType<
     typeof WorkspacesNavigator
   >;
@@ -85,7 +92,7 @@ export class Program {
         this.fileReader.readPackageJson(packageDir),
       ]);
 
-    const { name, type: packageJsonType } = packageJson;
+    const { name } = packageJson;
     const { rootDir } = repoInfo;
     const { type: packageType, target } = packageConfig;
     const cacheDir = path.join(packageDir, CONFIG_CACHE_DIRNAME);
@@ -165,11 +172,11 @@ export class Program {
 
     if (!isMonorepo) {
       return [rootDir] as Iterable<string>;
-    } else if (currentPackageDir && path.relative(currentPackageDir, rootDir)) {
-      return [currentPackageDir] as Iterable<string>;
-    } else {
-      return this.workspacesNavigator.getWorkspaceDirsIterator();
     }
+    if (currentPackageDir && path.relative(currentPackageDir, rootDir)) {
+      return [currentPackageDir] as Iterable<string>;
+    }
+    return this.workspacesNavigator.getWorkspaceDirsIterator();
   }
 
   public async withIterator<T1, T2>(
@@ -181,6 +188,6 @@ export class Program {
     for await (const value of await iterator()) {
       allPromises.push(Promise.resolve(callback.call(thisContext, value)));
     }
-    return await Promise.all(allPromises);
+    return Promise.all(allPromises);
   }
 }

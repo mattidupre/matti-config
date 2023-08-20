@@ -2,7 +2,6 @@ import rimraf from 'rimraf';
 import path from 'node:path';
 import * as fs from 'node:fs/promises';
 import fg from 'fast-glob';
-import puppeteer from 'puppeteer';
 import chokidar from 'chokidar';
 
 export class FileManager {

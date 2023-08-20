@@ -55,38 +55,50 @@ export default class Build extends Program {
   // }
 
   private async buildTypeDeclarations({ cacheDir }: PackageInfo) {
-    this.scriptRunner.run('tsc', {
-      args: [
-        '--project',
-        path.join(cacheDir, 'tsconfig-dist.json'),
-        '--emitDeclarationOnly',
-        '--declarationMap',
-        this.programInfo.isWatchMode ? TSC_WATCH_ARGS : '',
-      ],
+    const baseArgs = ['--project', path.join(cacheDir, 'tsconfig-dist.json')];
+    const tscArgs = [...baseArgs, '--emitDeclarationOnly'];
+    const tscAliasArgs = [...baseArgs];
+
+    // tsc-alias requires a non-watch run of TSC first.
+    await this.scriptRunner.run('tsc', {
+      args: tscArgs,
     });
+
+    await Promise.all([
+      this.scriptRunner.run('tsc', {
+        args: [
+          ...tscArgs,
+          ...(this.programInfo.isWatchMode ? [TSC_WATCH_ARGS] : []),
+        ],
+      }),
+      this.scriptRunner.run('tsc-alias', {
+        args: [
+          ...tscAliasArgs,
+          ...(this.programInfo.isWatchMode ? ['--watch'] : []),
+        ],
+      }),
+    ]);
   }
 
   private async buildRollup({
     name,
     cacheDir,
     packageJsExtension,
-    packageDir,
-    configRootDir,
   }: PackageInfo) {
-    return this.scriptRunner.run('rollup', {
-      args: [
-        '--config',
-        path.join(cacheDir, `rollup.config${packageJsExtension}`),
-        '--sourcemap',
-        '--no-watch.clearScreen',
-        this.programInfo.isWatchMode ? ROLLUP_WATCH_ARGS : '',
-      ],
-      onOutput: (message) => {
-        if (/created /.test(message)) {
-          this.logAsBuilt(name);
-        }
-      },
-    });
+    // return this.scriptRunner.run('rollup', {
+    //   args: [
+    //     '--config',
+    //     path.join(cacheDir, `rollup.config${packageJsExtension}`),
+    //     '--sourcemap',
+    //     '--no-watch.clearScreen',
+    //     this.programInfo.isWatchMode ? ROLLUP_WATCH_ARGS : '',
+    //   ],
+    //   onOutput: (message) => {
+    //     if (/created /.test(message)) {
+    //       this.logAsBuilt(name);
+    //     }
+    //   },
+    // });
   }
 
   private async buildVite({
