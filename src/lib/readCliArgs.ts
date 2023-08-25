@@ -1,11 +1,6 @@
 import _ from 'lodash';
 import yargs from 'yargs';
-import {
-  type ProgramInfo,
-  PROGRAMS,
-  PROGRAMS_OPTIONS,
-  ProgramType,
-} from '../entities.js';
+import { type ProgramInfo, PROGRAMS, PROGRAMS_OPTIONS } from '../entities.js';
 
 export const readCliArgs = (): ProgramInfo => {
   let breakIndex = process.argv.indexOf('--');
@@ -30,16 +25,23 @@ export const readCliArgs = (): ProgramInfo => {
     },
   );
 
+  const programArg: string = (result.argv as any)._[0] ?? '';
+
+  const program = Object.keys(PROGRAMS).find(
+    (p) => p.toLowerCase() === programArg.toLowerCase(),
+  );
+
+  if (!program) {
+    throw new Error(`Program "${programArg}" not found.`);
+  }
+
   const {
-    _: [program],
     watch: isWatchMode,
     watchProduction: isWatchProductionMode,
     root: isExecuteRoot,
     all: isExecuteAll,
     hard: isHard,
-  } = result.argv as unknown as {
-    _: [ProgramType, ...any];
-  } & Partial<Record<keyof typeof PROGRAMS_OPTIONS, boolean>> &
+  } = result.argv as Partial<Record<keyof typeof PROGRAMS_OPTIONS, boolean>> &
     Record<string, any>;
 
   return {

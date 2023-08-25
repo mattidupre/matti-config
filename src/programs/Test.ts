@@ -1,5 +1,5 @@
 import path from 'node:path';
-import type { PackageInfo } from '../entities.js';
+import { type PackageInfo, SOURCE_DIRNAME } from '../entities.js';
 import { pathDotPrefix } from '../utils/pathDotPrefix.js';
 import { Program } from '../lib/Program.js';
 
@@ -22,7 +22,8 @@ export default class Test extends Program {
       `vitest.config${packageJsExtension}`,
     );
 
-    // const testPaths = process.argv.slice(3).filter((a) => !a.startsWith('-'));
+    // Vitest does not find any tests when executing "run" with no path.
+    const globArg = extraArgs.length ? '' : `"./${SOURCE_DIRNAME}"`;
 
     await this.scriptRunner.run('vitest', {
       args: [
@@ -34,6 +35,7 @@ export default class Test extends Program {
         )}`,
         `--passWithNoTests`,
         ...extraArgs,
+        globArg,
       ],
       forceColor: true,
     });

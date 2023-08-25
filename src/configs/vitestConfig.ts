@@ -1,5 +1,5 @@
 import { defineConfig, mergeConfig } from 'vitest/config';
-import { type PackageInfo, CONFIG_APP_CONFIGS_EXTNAME } from '../entities.js';
+import { type PackageInfo } from '../entities.js';
 import path from 'node:path';
 import viteConfig from './viteConfig.js';
 import { pathDotPrefix } from '../utils/pathDotPrefix.js';
@@ -17,17 +17,6 @@ export default async (packageInfo: PackageInfo) => {
   const extensions = target === 'react' ? ['ts', 'tsx'] : ['ts'];
   const extensionsString =
     extensions.length === 1 ? extensions[0] : `{${extensions.join(',')}}`;
-
-  console
-    .log
-
-    // 'HERE: ',
-    // vitestSetup,
-    // '\n',
-    // process.cwd(),
-    // '\n',
-    // require.resolve('./vitestSetup'),
-    ();
 
   return mergeConfig(
     await viteConfig(packageInfo),

@@ -3,6 +3,7 @@ import path from 'node:path';
 import type { PackageInfo, RepoInfo } from '../entities.js';
 import type { PackageJson } from 'type-fest';
 import { DIST_DIRNAME } from '../entities.js';
+import _ from 'lodash';
 
 export const rootConfig = async ({ packageJson }: RepoInfo) => {
   const { type: _ } = packageJson;
@@ -12,6 +13,8 @@ export const rootConfig = async ({ packageJson }: RepoInfo) => {
   };
 };
 
+const PACKAGE_JSON_OMIT = ['exports', 'typesVersions', 'type'] as const;
+
 export const packageConfig = async (
   packageInfo: PackageInfo,
 ): Promise<PackageJson> => {
@@ -19,14 +22,12 @@ export const packageConfig = async (
   const {
     name,
     version,
-    type: moduleType,
     bin,
     main,
     scripts: originalScripts,
-    exports: _,
-    typesVersions: __,
     ...packageJsonRest
-  } = packageJson;
+    // Note: Omit<PackageJson, ...> returns every value as JsonValue.
+  } = _.omit(packageJson, ['exports', 'typesVersions', 'type']) as PackageJson;
 
   const entryNames = (
     await fg(['*.ts'], {
@@ -53,8 +54,7 @@ export const packageConfig = async (
         entryName === 'index' ? '.' : `./${entryName}`,
         {
           types: `./${path.join(DIST_DIRNAME, entryName)}.d.ts`,
-          import: `./${path.join(DIST_DIRNAME, entryName)}.mjs`,
-          require: `./${path.join(DIST_DIRNAME, entryName)}.cjs`,
+          import: `./${path.join(DIST_DIRNAME, entryName)}.js`,
         },
       ]),
     ),
@@ -69,10 +69,12 @@ export const packageConfig = async (
   const scripts = {
     ...originalScripts,
     m: 'npx matti-config',
+    dev: 'npx matti-config clean && npx matti-config configure && npx matti-config build --watch',
   };
 
   return {
     name,
+    type: 'module',
     version,
     bin,
     main,

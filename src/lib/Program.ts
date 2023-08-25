@@ -15,6 +15,7 @@ import {
   CONFIG_CACHE_DIRNAME,
   CONFIG_APP_ROOT_DIR,
   CONFIG_APP_CONFIGS_DIR,
+  CONFIG_APP_PROGRAMS_DIR,
   CONFIG_APP_DIST_DIR,
   SOURCE_DIRNAME,
   DIST_DIRNAME,
@@ -53,9 +54,10 @@ export class Program {
 
   public static async import(programInfo: ProgramInfo) {
     const { default: SomeClass } = await import(
-      `${PROGRAMS[programInfo.program].scriptPath}.js`
+      path.join(CONFIG_APP_PROGRAMS_DIR, `${programInfo.program}.js`)
     );
     const instance = new SomeClass(programInfo) as InstanceType<typeof Program>;
+    console.log(`Running ${programInfo.program}`);
     return instance.run();
   }
 

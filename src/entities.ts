@@ -20,6 +20,11 @@ export const CONFIG_APP_DIST_DIR = path.join(CONFIG_APP_ROOT_DIR, 'dist');
 
 export const CONFIG_APP_CONFIGS_DIR = path.join(CONFIG_APP_DIST_DIR, 'configs');
 
+export const CONFIG_APP_PROGRAMS_DIR = path.join(
+  CONFIG_APP_DIST_DIR,
+  'programs',
+);
+
 export const CONFIG_APP_CONFIGS_EXTNAME = '.mjs';
 
 export const DEFAULT_CONFIG_COMMENT = [
@@ -75,53 +80,48 @@ export const PROGRAMS: Record<
   string,
   {
     description: string;
-    scriptPath: string;
     acceptedOptions: ReadonlyArray<Partial<keyof typeof PROGRAMS_OPTIONS>>;
+    // TODO: Add dependencies to call other programs first.
   }
 > = {
-  configure: {
-    description: 'Create top-level config files.',
-    scriptPath: path.join(CONFIG_APP_DIST_DIR, 'programs/Configure'),
-    acceptedOptions: ['root'],
-  },
-  link: {
-    description: 'Link matching repos from parent folder.',
-    scriptPath: path.join(CONFIG_APP_DIST_DIR, 'programs/Link'),
-    acceptedOptions: ['root'],
-  },
-  build: {
-    description: 'Build the package.',
-    scriptPath: path.join(CONFIG_APP_DIST_DIR, 'programs/Build'),
-    acceptedOptions: ['watch', 'watchProduction'],
-  },
-  storybook: {
-    description: 'Build storybook.',
-    scriptPath: path.join(CONFIG_APP_DIST_DIR, 'programs/Storybook'),
-    acceptedOptions: ['watch'],
-  },
-  test: {
-    description: 'Test the package.',
-    scriptPath: path.join(CONFIG_APP_DIST_DIR, 'programs/Test'),
-    acceptedOptions: ['watch'],
-  },
-  lint: {
-    description: 'Lint the package.',
-    scriptPath: path.join(CONFIG_APP_DIST_DIR, 'programs/Lint'),
-    acceptedOptions: ['root'],
-  },
-  typeCheck: {
-    description: 'Check all package types.',
-    scriptPath: path.join(CONFIG_APP_DIST_DIR, 'programs/TypeCheck'),
+  Dev: {
+    description: 'Clean, configure, and build in watch mode.',
     acceptedOptions: [],
   },
-  clean: {
+  Configure: {
+    description: 'Create top-level config files.',
+    acceptedOptions: ['root'],
+  },
+  Link: {
+    description: 'Link matching repos from parent folder.',
+    acceptedOptions: ['root'],
+  },
+  Build: {
+    description: 'Build the package.',
+    acceptedOptions: ['watch', 'watchProduction'],
+  },
+  Storybook: {
+    description: 'Build storybook.',
+    acceptedOptions: ['watch'],
+  },
+  Test: {
+    description: 'Test the package.',
+    acceptedOptions: ['watch'],
+  },
+  Lint: {
+    description: 'Lint the package.',
+    acceptedOptions: ['root'],
+  },
+  TypeCheck: {
+    description: 'Check all package types.',
+    acceptedOptions: [],
+  },
+  Clean: {
     description: 'Remove config files.',
-    scriptPath: path.join(CONFIG_APP_DIST_DIR, 'programs/Clean'),
     acceptedOptions: ['root', 'hard'],
   },
-  debug: {
+  Debug: {
     description: 'Debug.',
-    scriptPath: path.join(CONFIG_APP_DIST_DIR, 'programs/Debug'),
     acceptedOptions: ['root', 'watch'],
   },
 } as const;
