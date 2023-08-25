@@ -3,7 +3,9 @@
   "version": "0.0.0",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "bin": "./dist/cli.js",
+  "bin": {
+    "m": "./dist/cli.js"
+  },
   "type": "module",
   "exports": {
     ".": {

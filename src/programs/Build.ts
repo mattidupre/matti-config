@@ -27,36 +27,33 @@ export default class Build extends Program {
     // await this.fileManager.rimraf(path.join(distDir, '**/*'));
     // await this.fileManager.rimraf(path.join(distDir, '**/*', '*.tsbuildinfo'));
 
-    await Promise.all([
-      this.fileManager.copyFiles(
-        // TODO: Add watch option.
-        EXTRA_FILES.map((ext) => `**/*${ext}`),
-        { sourceDir, distDir },
-      ),
-      this.buildTypeDeclarations(packageInfo),
-      target === 'browser' || target === 'react'
-        ? this.buildVite(packageInfo)
-        : this.buildRollup(packageInfo),
-    ]);
+    await Promise.all(
+      [
+        this.fileManager.copyFiles(
+          // TODO: Add watch option.
+          EXTRA_FILES.map((ext) => `**/*${ext}`),
+          { sourceDir, distDir },
+        ),
+        target === 'browser' || target === 'react'
+          ? [this.buildTsc(packageInfo, true), this.buildVite(packageInfo)]
+          : this.buildTsc(packageInfo, false),
+      ].flat(),
+    );
   }
 
   private logAsBuilt(packageName: string) {
     console.log(`${createBuildCompleteMessage(packageName)}`);
   }
 
-  // private async buildTsc({ cacheDir }: PackageInfo) {
-  //   return this.scriptRunner.run('tsc', {
-  //     args: [
-  //       '--project',
-  //       path.join(cacheDir, 'tsconfig-dist.json'),
-  //       this.programInfo.isDevMode ? TSC_WATCH_ARGS : '',
-  //     ],
-  //   });
-  // }
-
-  private async buildTypeDeclarations({ cacheDir }: PackageInfo) {
+  private async buildTsc(
+    { cacheDir }: PackageInfo,
+    emitDeclarationOnly: boolean,
+  ) {
     const baseArgs = ['--project', path.join(cacheDir, 'tsconfig-dist.json')];
-    const tscArgs = [...baseArgs, '--emitDeclarationOnly'];
+    const tscArgs = [
+      ...baseArgs,
+      emitDeclarationOnly ? '--emitDeclarationOnly' : '',
+    ];
     const tscAliasArgs = [...baseArgs];
 
     // tsc-alias requires a non-watch run of TSC first.

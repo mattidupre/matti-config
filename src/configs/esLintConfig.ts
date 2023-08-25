@@ -37,6 +37,7 @@ const baseConfig = {
     },
   ],
   rules: {
+    'import/no-cycle': 'warn', // TODO: Customize so it ignores index files?
     'arrow-body-style': 'off',
     'no-undef': 'off',
     'import/order': 'off',

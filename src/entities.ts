@@ -7,6 +7,8 @@ import { z } from 'zod';
 
 export const CONFIG_APP_NAME = 'matti-config';
 
+export const CONFIG_CLI_FLAGS = ['--enable-source-maps'] as const;
+
 export const CONFIG_APP_ROOT_DIR = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   '..',

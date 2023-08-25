@@ -22,7 +22,7 @@ export const packageConfig = async (
     type: moduleType,
     bin,
     main,
-    scripts,
+    scripts: originalScripts,
     exports: _,
     typesVersions: __,
     ...packageJsonRest
@@ -64,6 +64,11 @@ export const packageConfig = async (
           './style.css': './dist/style.css',
         }
       : {}),
+  };
+
+  const scripts = {
+    ...originalScripts,
+    m: 'npx matti-config',
   };
 
   return {
