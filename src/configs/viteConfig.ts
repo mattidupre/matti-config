@@ -3,26 +3,26 @@ import fg from 'fast-glob';
 import { defineConfig } from 'vite';
 import dts from 'vite-plugin-dts';
 import react from '@vitejs/plugin-react';
-import { RESOLVE_ALIASES } from '../entities.js';
 import { vanillaExtractPlugin } from '@vanilla-extract/vite-plugin';
 import ViteYaml from '@modyfi/vite-plugin-yaml';
 import { ImageLoader as VanillaExtractImageLoader } from 'esbuild-vanilla-image-loader';
-import type { PackageInfo, PackageTarget, PackageType } from '../entities.js';
+import {
+  type PackageInfo,
+  RESOLVE_ALIASES,
+  SOURCE_DIRNAME,
+  DIST_DIRNAME,
+} from '../entities.js';
 import type { UserConfig as ViteConfig } from 'vite';
-import { SOURCE_DIRNAME, DIST_DIRNAME } from '../entities.js';
-import tsconfigPaths from 'vite-tsconfig-paths';
 
 // TODO: See https://www.npmjs.com/package/vite-node
 // TODO: See https://www.npmjs.com/package/vite-plugin-node
 
 export default async ({
   target,
-  rootDir,
   cacheDir,
   packageDir,
   sourceDir,
   packageType,
-  configRootDir,
   isPackageFrontend,
 }: PackageInfo): Promise<ViteConfig> => {
   const isLibrary = packageType === 'library';
@@ -47,14 +47,14 @@ export default async ({
       ? {
           external: ['react'],
           output: [
-            {
-              format: 'commonjs',
-              entryFileNames: '[name].cjs',
-              // preserveModules: true,
-            },
+            // {
+            //   format: 'commonjs',
+            //   entryFileNames: '[name].cjs',
+            //   // preserveModules: true,
+            // },
             {
               format: 'module',
-              entryFileNames: '[name].mjs',
+              entryFileNames: '[name].js',
               // preserveModules: true,
             },
           ],

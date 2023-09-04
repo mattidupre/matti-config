@@ -50,7 +50,7 @@ export default class Configure extends Program {
       vsCodeConfigPath,
       _.defaultsDeep(
         vsCodeConfig.rootConfig(repoInfo),
-        (await this.fileReader.readJson(vsCodeConfigPath)) ?? {},
+        (await this.configReader.readJson(vsCodeConfigPath)) ?? {},
       ),
     );
 

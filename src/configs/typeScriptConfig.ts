@@ -22,6 +22,7 @@ const baseCompilerOptions: TsConfigJson['compilerOptions'] = {
   allowSyntheticDefaultImports: true,
   resolveJsonModule: true,
   // isolatedModules: true,
+  // preserveSymlinks: true, // Enabling for TS error 2742.
   skipLibCheck: true,
   allowJs: false,
   sourceMap: true,
@@ -161,6 +162,7 @@ export default (
       declarationMap: true,
     },
     'tsc-alias': {
+      verbose: true,
       resolveFullPaths: true,
     },
     include,

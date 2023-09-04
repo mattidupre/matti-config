@@ -25,8 +25,8 @@ export default class Clean extends Program {
         : [
             this.fileManager.rimraf(path.join(nodeModulesDir, '.vite')),
             this.fileManager.rimraf(path.join(nodeModulesDir, '.cache')),
+            this.fileManager.rimraf(path.join(distDir, '*'), { glob: true }),
           ]),
-      this.fileManager.rimraf(path.join(distDir, '*'), { glob: true }),
       this.fileManager.rimraf(cacheDir),
       ...EXTRA_PACKAGE_FILES.map((extraPackageFile) =>
         this.fileManager.rimraf(path.join(packageDir, extraPackageFile)),

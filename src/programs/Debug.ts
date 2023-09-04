@@ -7,15 +7,30 @@ export default class Build extends Program {
     await this.withInfo({
       withRoot: this.debugRoot,
       withPackage: this.debugPackage,
+      withDependency: this.debugDependency,
+      sequential: true,
     });
   }
 
   private async debugRoot() {
+    // await new Promise((resolve) => {
+    //   setTimeout(resolve, 1000);
+    // });
     await this.debugLog('ROOT');
   }
 
   private async debugPackage(packageInfo: PackageInfo) {
+    // await new Promise((resolve) => {
+    //   setTimeout(resolve, 1000);
+    // });
     await this.debugLog(packageInfo.name);
+  }
+
+  private async debugDependency(packageInfo: PackageInfo) {
+    // await new Promise((resolve) => {
+    //   setTimeout(resolve, 1000);
+    // });
+    await this.debugLog(`>>${packageInfo.name}`);
   }
 
   private async debugLog(str: string) {

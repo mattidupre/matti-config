@@ -37,6 +37,7 @@ const baseConfig = {
     },
   ],
   rules: {
+    'prefer-arrow-callback': 'off',
     'import/no-cycle': 'warn', // TODO: Customize so it ignores index files?
     'arrow-body-style': 'off',
     'no-undef': 'off',

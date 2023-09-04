@@ -1,13 +1,14 @@
-import fs from 'node:fs';
 import path from 'node:path';
 import { Transform } from 'node:stream';
 import fg from 'fast-glob';
-import type { PackageJson } from 'type-fest';
+import { type PackageJson } from 'type-fest';
 import { Memoize } from 'typescript-memoize';
 import { readJson } from '../../lib/readJson.js';
 import { readYaml } from '../../lib/readYaml.js';
-import { StreamMemoizer } from './StreamMemoizer.js';
+import { StreamMemoizer } from './utils/StreamMemoizer.js';
 import { stream } from 'event-iterator';
+import { parseWorkspaces } from './lib/parseWorkspaces.js';
+import { generateParentPackageDirs } from './lib/generateParentPackageDirs.js';
 
 export type WorkspaceInfo = {
   isMonorepo: boolean;
@@ -18,24 +19,52 @@ export type WorkspaceInfo = {
   relativePackageDir: string;
 };
 
+type DependencyGraphEntry = {
+  name: string;
+  directory: string;
+  parentName: string;
+  allParentNames: Array<string>;
+  childNames: Array<string>;
+  allChildNames: Array<string>;
+};
+
+type DependencyGraph = Map<string, DependencyGraphEntry>;
+
+type WithWorkspaceCallback = (
+  dependencyDir: string,
+  dependencyName: string,
+) => void | Promise<void>;
+
+type WithWorkspaceOptions = {
+  sequential?: boolean;
+};
+
+const wrapWithWorkspaceCallback = (
+  options: WithWorkspaceOptions,
+  callback: WithWorkspaceCallback,
+): [WithWorkspaceCallback, () => Promise<undefined>] => {
+  const callbacks: Array<() => Promise<void>> = [];
+
+  return [
+    (...args) => {
+      callbacks.push(async () => {
+        await callback(...args);
+      });
+    },
+    () => {
+      if (options.sequential) {
+        return callbacks.reduce(
+          (p, c) => p.then(() => c()),
+          Promise.resolve(undefined),
+        );
+      }
+
+      return Promise.all(callbacks.map((c) => c())).then(() => undefined);
+    },
+  ];
+};
+
 // TODO: Rename "package" terminology to "workspace".
-
-function* generateParentPackageDirs(initialDir: string) {
-  let prevDir: string;
-  let thisDir = initialDir;
-  while (thisDir !== prevDir) {
-    if (fs.existsSync(path.join(thisDir, 'package.json'))) {
-      yield thisDir;
-    }
-    prevDir = thisDir;
-    thisDir = path.normalize(path.join(thisDir, '..'));
-  }
-}
-
-const parseWorkspaces = (
-  workspaces: PackageJson['workspaces'],
-): undefined | Array<string> =>
-  [].concat(workspaces || []).map((w) => path.join(w, 'package.json'));
 
 export class WorkspacesNavigator {
   private readonly cwd: string;
@@ -51,12 +80,16 @@ export class WorkspacesNavigator {
    */
   @Memoize()
   public async getIsMonorepo(): Promise<boolean> {
-    return !!(await this.getWorkspaces());
+    return !!(await this.getWorkspacesConfig());
   }
 
   @Memoize()
-  public async getNearestPackage() {
-    return generateParentPackageDirs(this.cwd).next().value;
+  public async getNearestWorkspaceDir() {
+    const parentPackageDir = generateParentPackageDirs(this.cwd).next().value;
+    if (!parentPackageDir) {
+      throw new Error('Nearest package not found.');
+    }
+    return parentPackageDir;
   }
 
   @Memoize()
@@ -75,7 +108,7 @@ export class WorkspacesNavigator {
   }
 
   @Memoize()
-  public async getWorkspacesDirs(): Promise<undefined | Array<string>> {
+  public async getWorkspacesDirs(): Promise<Array<string>> {
     const workspaceDirs = [];
     for await (const dir of await this.getWorkspaceDirsIterator()) {
       workspaceDirs.push(dir);
@@ -84,11 +117,162 @@ export class WorkspacesNavigator {
   }
 
   /**
-   * Get the "workspaces" property of the root package.json.
+   * Crawl all workspaces sorted in order of dependencies.
    */
-  @Memoize()
-  private async getWorkspaces(): Promise<PackageJson['workspaces']> {
-    return WorkspacesNavigator.readWorkspaces(await this.getRootDir());
+  public async withWorkspaces(
+    options: WithWorkspaceOptions,
+    callback: WithWorkspaceCallback,
+  ) {
+    const [wrappedCallback, getCallbackPromise] = wrapWithWorkspaceCallback(
+      options,
+      callback,
+    );
+
+    const sortedDependencies = await this.getSortedDependencies(
+      await this.getWorkspacesDirs(),
+    );
+
+    await Promise.all(
+      sortedDependencies.map(async (dependencyName) =>
+        wrappedCallback(
+          await this.getWorkspaceDir(dependencyName),
+          dependencyName,
+        ),
+      ),
+    );
+
+    await getCallbackPromise();
+  }
+
+  /**
+   * Crawl package dependency workspaces sorted in order of dependencies.
+   */
+  public async withDependencies(
+    workspaceDir: string,
+    options: WithWorkspaceOptions,
+    callback: WithWorkspaceCallback,
+  ) {
+    const [wrappedCallback, getCallbackPromise] = wrapWithWorkspaceCallback(
+      options,
+      callback,
+    );
+
+    const workspaceJson = await WorkspacesNavigator.readPackageJson(
+      workspaceDir,
+    );
+
+    const sortedDependencies = await this.getSortedDependencies(
+      await this.getInternalDependencyPaths(workspaceJson),
+    );
+
+    await Promise.all(
+      sortedDependencies.map(async (dependencyName) =>
+        wrappedCallback(
+          await this.getWorkspaceDir(dependencyName),
+          dependencyName,
+        ),
+      ),
+    );
+
+    await getCallbackPromise();
+  }
+
+  private async getSortedDependencies(
+    workspaceDirs: Array<string>,
+    parentName?: string, // TODO
+  ): Promise<Array<string>> {
+    const graph: DependencyGraph = new Map();
+    await Promise.all(
+      workspaceDirs.map((dir) =>
+        this.createDependenciesGraphRecursive(
+          dir,
+          graph,
+          [].concat(parentName),
+        ),
+      ),
+    );
+    return this.flattenDependenciesGraphRecursive(graph);
+  }
+
+  private async createDependenciesGraphRecursive(
+    workspaceDir: string,
+    graph: DependencyGraph,
+    allParentNames: Array<string>,
+  ) {
+    const workspaceJson = await WorkspacesNavigator.readPackageJson(
+      workspaceDir,
+    );
+
+    const { name: workspaceName } = workspaceJson;
+    const childNames: DependencyGraphEntry['childNames'] = [];
+    const allChildNames: DependencyGraphEntry['allChildNames'] = [];
+    graph.set(workspaceName, {
+      name: workspaceName,
+      directory: workspaceDir,
+      parentName: allParentNames.slice[allParentNames.length - 1],
+      allParentNames,
+      childNames,
+      allChildNames,
+    });
+
+    const dependencies = await this.getInternalDependencies(workspaceJson);
+
+    await Promise.all(
+      dependencies.map(async ([dependencyName, dependencyDir]) => {
+        if (allParentNames.includes(dependencyName)) {
+          throw new Error(`"${dependencyName}" is a circular dependency.`);
+        }
+
+        childNames.push(dependencyName);
+        allChildNames.push(dependencyName);
+
+        if (!graph.has(dependencyName)) {
+          childNames.push(
+            ...(await this.createDependenciesGraphRecursive(
+              dependencyDir,
+              graph,
+              [...allParentNames, workspaceName],
+            )),
+          );
+        } else {
+          const dependencyGraphEntry = graph.get(dependencyName);
+          dependencyGraphEntry.allParentNames.push(workspaceName);
+          allChildNames.push(...dependencyGraphEntry.childNames);
+        }
+      }),
+    );
+
+    return childNames;
+  }
+
+  private flattenDependenciesGraphRecursive(
+    dependencyGraph: DependencyGraph,
+    names: Array<string> = Array.from(dependencyGraph.keys()),
+    start: Array<string> = [],
+  ) {
+    // FROM: https://stackoverflow.com/a/54347328
+
+    const processed = [...start];
+    const unprocessed = [];
+
+    names.forEach((name) => {
+      if (
+        // If an instance has no dependencies, this will also return true.
+        dependencyGraph.get(name).childNames.every((v) => processed.includes(v))
+      ) {
+        processed.push(name);
+      } else {
+        unprocessed.push(name);
+      }
+    });
+
+    return unprocessed.length
+      ? this.flattenDependenciesGraphRecursive(
+          dependencyGraph,
+          unprocessed,
+          processed,
+        )
+      : processed;
   }
 
   /**
@@ -117,7 +301,7 @@ export class WorkspacesNavigator {
       this.streamMemoizer = new StreamMemoizer(async () => {
         const [rootDir, workspaces] = await Promise.all([
           this.getRootDir(),
-          this.getWorkspaces(),
+          this.getWorkspacesConfig(),
         ]);
         return fg
           .stream(parseWorkspaces(workspaces), {
@@ -140,27 +324,57 @@ export class WorkspacesNavigator {
   }
 
   @Memoize()
+  private async getInternalDependencies(packageJson: PackageJson) {
+    const { dependencies, devDependencies } = packageJson;
+
+    return (
+      await Promise.all(
+        Object.keys({
+          ...(dependencies ?? {}),
+          ...(devDependencies ?? {}),
+        }).map(async (dependencyName) => [
+          dependencyName,
+          await this.getWorkspaceDir(dependencyName),
+        ]),
+      )
+    ).filter(([, dependencyName]) => dependencyName !== undefined);
+  }
+
+  @Memoize()
+  private async getInternalDependencyPaths(packageJson: PackageJson) {
+    return (await this.getInternalDependencies(packageJson)).map(
+      ([, dependencyPath]) => dependencyPath,
+    );
+  }
+
+  /**
+   * Get the "workspaces" property of the root package.json.
+   */
+  @Memoize()
+  private async getWorkspacesConfig(): Promise<PackageJson['workspaces']> {
+    return WorkspacesNavigator.readWorkspaces(await this.getRootDir());
+  }
+
+  @Memoize()
   private static async readWorkspaces(
-    absolutePackagePath: string,
+    absoluteRootDir: string,
   ): Promise<undefined | PackageJson['workspaces'] | Array<string>> {
     const [packageJson, workspaceYaml] = await Promise.all([
-      WorkspacesNavigator.readPackageJson(absolutePackagePath),
-      WorkspacesNavigator.readWorkspaceYaml(absolutePackagePath),
+      WorkspacesNavigator.readPackageJson(absoluteRootDir),
+      WorkspacesNavigator.readWorkspaceYaml(absoluteRootDir),
     ]);
     return workspaceYaml?.packages ?? packageJson?.workspaces ?? undefined;
   }
 
   @Memoize()
-  private static readPackageJson(absolutePackagePath: string) {
-    return readJson<PackageJson>(
-      path.join(absolutePackagePath, 'package.json'),
-    );
+  private static readPackageJson(absolutePackageDir: string) {
+    return readJson<PackageJson>(path.join(absolutePackageDir, 'package.json'));
   }
 
   @Memoize()
-  private static readWorkspaceYaml(absolutePackagePath: string) {
+  private static readWorkspaceYaml(absolutePackageDir: string) {
     return readYaml<{ packages: Array<string> }>(
-      path.join(absolutePackagePath, 'pnpm-workspace.yaml'),
+      path.join(absolutePackageDir, 'pnpm-workspace.yaml'),
     );
   }
 }

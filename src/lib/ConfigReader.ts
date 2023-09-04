@@ -5,7 +5,7 @@ import { type JsonObject, type PackageJson } from 'type-fest';
 import { type PackageConfig } from '../entities.js';
 import { CONFIG_FILENAME, PackageConfigSchema } from '../entities.js';
 
-export class FileReader {
+export class ConfigReader {
   /**
    * Read any JSON file at the given absolute path.
    */

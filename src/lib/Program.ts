@@ -5,8 +5,9 @@ import {
   CONFIG_APP_CONFIGS_EXTNAME,
 } from '../entities.js';
 import path from 'node:path';
+import chalk from 'chalk';
 import { WorkspacesNavigator } from '../utils/WorkspacesNavigator/index.js';
-import { FileReader } from './FileReader.js';
+import { ConfigReader } from './ConfigReader.js';
 import { FileWriter } from './FileWriter.js';
 import { FileManager } from './FileManager.js';
 import { ScriptRunner } from './ScriptRunner.js';
@@ -29,7 +30,7 @@ export class Program {
 
   protected readonly programName: keyof typeof PROGRAMS;
 
-  protected readonly fileReader: InstanceType<typeof FileReader>;
+  protected readonly configReader: InstanceType<typeof ConfigReader>;
 
   protected readonly fileWriter: InstanceType<typeof FileWriter>;
 
@@ -37,7 +38,7 @@ export class Program {
 
   protected readonly scriptRunner: InstanceType<typeof ScriptRunner>;
 
-  private readonly workspacesNavigator: InstanceType<
+  protected readonly workspacesNavigator: InstanceType<
     typeof WorkspacesNavigator
   >;
 
@@ -45,7 +46,7 @@ export class Program {
     this.programInfo = programInfo;
     this.cwd = process.cwd();
     this.programName = programInfo.program;
-    this.fileReader = new FileReader();
+    this.configReader = new ConfigReader();
     this.fileWriter = new FileWriter();
     this.fileManager = new FileManager();
     this.scriptRunner = new ScriptRunner(CONFIG_APP_DIST_DIR);
@@ -72,7 +73,7 @@ export class Program {
       this.workspacesNavigator.getIsMonorepo(),
     ]);
 
-    const packageJson = await this.fileReader.readPackageJson(rootDir);
+    const packageJson = await this.configReader.readPackageJson(rootDir);
 
     return {
       cwd: this.cwd,
@@ -90,8 +91,8 @@ export class Program {
       await Promise.all([
         this.getRepoInfo(),
         this.getIsAtRoot(packageDir),
-        this.fileReader.readPackageConfig(packageDir),
-        this.fileReader.readPackageJson(packageDir),
+        this.configReader.readPackageConfig(packageDir),
+        this.configReader.readPackageJson(packageDir),
       ]);
 
     const { name } = packageJson;
@@ -132,44 +133,71 @@ export class Program {
   public async withInfo({
     withRoot,
     withPackage,
+    withDependency,
+    sequential,
   }: {
     withRoot?: (repoInfo: RepoInfo) => Promise<void>;
     withPackage?: (packageInfo: PackageInfo) => Promise<void>;
+    withDependency?: (packageInfo: PackageInfo) => Promise<void>;
+    sequential?: boolean;
   }) {
-    const { programInfo: programOptions } = this;
+    const {
+      programInfo: { isExecuteAll, isExecuteRoot },
+    } = this;
     const isAtRoot = await this.getIsAtRoot();
 
-    const withRootCallback = async () =>
-      withRoot?.call(this, await this.getRepoInfo());
-    const withPackagesCallback = async () =>
-      this.withIterator(
-        () => this.getActivePackageDirsIterator(),
-        async (packageDir: string) =>
-          withPackage?.call(this, await this.getPackageInfo(packageDir)),
-        this,
-      );
+    const callRoot = async () => withRoot?.call(this, await this.getRepoInfo());
 
-    if (isAtRoot || programOptions.isExecuteAll) {
-      await Promise.all([withRootCallback(), withPackagesCallback()]);
-    } else if (programOptions.isExecuteRoot) {
-      await withRootCallback();
+    const callPackage = async (packageDir) =>
+      withPackage?.call(this, await this.getPackageInfo(packageDir));
+
+    const callDependency = async (dependencyDir) =>
+      withDependency?.call(this, await this.getPackageInfo(dependencyDir));
+
+    if (isAtRoot || isExecuteAll) {
+      await callRoot();
+      await this.workspacesNavigator.withWorkspaces(
+        { sequential },
+        callPackage,
+      );
+    } else if (isExecuteRoot) {
+      await callRoot();
     } else {
-      await withPackagesCallback();
+      const packageDir =
+        await this.workspacesNavigator.getNearestWorkspaceDir();
+      await this.workspacesNavigator.withDependencies(
+        packageDir,
+        { sequential },
+        callDependency,
+      );
+      await callPackage(packageDir);
     }
+  }
+
+  public async log(titleStr: string, messageStr?: string) {
+    const program = chalk.bold(this.programInfo.program.toUpperCase() + ':');
+    const title = messageStr ? ' ' + titleStr.toUpperCase() : '';
+    const message = ' ' + (messageStr ?? titleStr);
+
+    console.log(
+      chalk.cyan(chalk.inverse(' ' + program + title + ' ') + message),
+    );
   }
 
   public async getIsAtRoot(packageDir?: string) {
     const [rootDir, currentPackageDir = null] = await Promise.all([
       this.workspacesNavigator.getRootDir(),
-      packageDir ?? this.workspacesNavigator.getNearestPackage(),
+      packageDir ?? this.workspacesNavigator.getNearestWorkspaceDir(),
     ]);
     return !path.relative(rootDir, currentPackageDir);
   }
 
+  // TODO: Get rid of everything below.
+
   public async getActivePackageDirsIterator() {
     const [{ isMonorepo, rootDir }, currentPackageDir] = await Promise.all([
       this.getRepoInfo(),
-      this.workspacesNavigator.getNearestPackage(),
+      this.workspacesNavigator.getNearestWorkspaceDir(),
     ]);
 
     if (!isMonorepo) {

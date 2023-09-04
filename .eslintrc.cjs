@@ -23,6 +23,7 @@ module.exports = {
       },
       parser: '@typescript-eslint/parser',
       rules: {
+        'prefer-template': 'off',
         'import/prefer-default-export': 'off',
         'class-methods-use-this': 'off',
         'import/order': 'off',
