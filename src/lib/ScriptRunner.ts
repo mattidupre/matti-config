@@ -13,14 +13,6 @@ type RunOptions = {
   skipNpx?: boolean;
 };
 
-const defaultLogger: RunOptions['log'] = (level, message) => {
-  if (level === 'error') {
-    process.stderr.write(message);
-  } else {
-    process.stdout.write(message);
-  }
-};
-
 export class ScriptRunner {
   public cwd: string;
 
@@ -34,13 +26,7 @@ export class ScriptRunner {
 
   async run(
     script: string,
-    {
-      args = [],
-      cwd,
-      log = defaultLogger,
-      forceColor,
-      skipNpx,
-    }: RunOptions = {},
+    { args = [], cwd, log, forceColor, skipNpx }: RunOptions = {},
   ) {
     const [scriptBase, ...argStrings] = [
       ...(skipNpx ? [script] : ['npx', script]),
@@ -75,8 +61,18 @@ export class ScriptRunner {
 
         child.on('error', handleError);
         child.on('exit', handleExit);
-        child.stdout.on('data', (data) => log('info', data.toString()));
-        child.stderr.on('data', (data) => log('error', data.toString()));
+        child.stdout.on('data', (data) => {
+          if (log) {
+            return log('info', data.toString().trim());
+          }
+          return process.stdout.write(data);
+        });
+        child.stderr.on('data', (data) => {
+          if (log) {
+            return log('error', data.toString().trim());
+          }
+          return process.stderr.write(data);
+        });
       } catch (err) {
         handleError(err);
       }

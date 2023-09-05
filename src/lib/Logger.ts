@@ -162,7 +162,7 @@ export class Logger {
       parsedMessages = messages.reduce(
         (arr, message, index) => [
           ...arr,
-          ...(index > 0 ? ['\n'] : []),
+          ...(index > 0 && index < messages.length - 1 ? ['\n'] : []),
           message,
         ],
         [],
