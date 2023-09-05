@@ -5,12 +5,12 @@ import {
   CONFIG_APP_CONFIGS_EXTNAME,
 } from '../entities.js';
 import path from 'node:path';
-import chalk from 'chalk';
 import { WorkspacesNavigator } from '../utils/WorkspacesNavigator/index.js';
 import { ConfigReader } from './ConfigReader.js';
 import { FileWriter } from './FileWriter.js';
 import { FileManager } from './FileManager.js';
 import { ScriptRunner } from './ScriptRunner.js';
+import { Logger } from './Logger.js';
 import {
   PROGRAMS,
   CONFIG_CACHE_DIRNAME,
@@ -38,9 +38,13 @@ export class Program {
 
   protected readonly scriptRunner: InstanceType<typeof ScriptRunner>;
 
-  protected readonly workspacesNavigator: InstanceType<
+  private readonly workspacesNavigator: InstanceType<
     typeof WorkspacesNavigator
   >;
+
+  private readonly logger: InstanceType<typeof Logger>;
+
+  public log: InstanceType<typeof Logger>['log'];
 
   constructor(programInfo: ProgramInfo) {
     this.programInfo = programInfo;
@@ -49,8 +53,11 @@ export class Program {
     this.configReader = new ConfigReader();
     this.fileWriter = new FileWriter();
     this.fileManager = new FileManager();
-    this.scriptRunner = new ScriptRunner(CONFIG_APP_DIST_DIR);
+    // TODO: Tie this to current logger.
+    this.scriptRunner = new ScriptRunner({ cwd: CONFIG_APP_DIST_DIR });
     this.workspacesNavigator = new WorkspacesNavigator(this.cwd);
+    this.logger = new Logger({ color: 'cyan', heading: this.programName });
+    this.log = this.logger.log.bind(this.logger);
   }
 
   public static async import(programInfo: ProgramInfo) {
@@ -58,8 +65,11 @@ export class Program {
       path.join(CONFIG_APP_PROGRAMS_DIR, `${programInfo.program}.js`)
     );
     const instance = new SomeClass(programInfo) as InstanceType<typeof Program>;
-    console.log(`Running ${programInfo.program}`);
-    return instance.run();
+    try {
+      await instance.run();
+    } catch (err) {
+      instance.logger.log({ level: 'error' }, err.message, err);
+    }
   }
 
   public run() {
@@ -130,6 +140,47 @@ export class Program {
     };
   }
 
+  // Allows this.log to automatically include package name.
+  private async callWithLogContext<TArgs extends Array<unknown>>(
+    fn: undefined | { (...args: TArgs): unknown },
+    subHeading: string,
+    sequential: boolean,
+    ...args: TArgs
+  ) {
+    if (!fn) {
+      return;
+    }
+    const logger = this.logger.extend(({ heading }) => ({
+      heading: [
+        heading[0],
+        subHeading + (sequential ? ' (sequential)' : ' (parallel)'),
+      ],
+    }));
+    const ctx = new Proxy(this, {
+      get(target, prop) {
+        if (prop === 'temp') {
+          return subHeading;
+        }
+        if (prop === 'logger') {
+          return logger;
+        }
+        if (prop === 'log') {
+          return logger.log.bind(logger);
+        }
+        // @ts-expect-error
+        // eslint-disable-next-line prefer-rest-params
+        return Reflect.get(...arguments);
+      },
+    });
+    await logger.log('info', 'STARTING');
+    try {
+      await fn.apply(ctx, args);
+    } catch (err) {
+      await logger.log('error', err.message, '\n', err);
+    }
+    await logger.log('info', 'FINISHED');
+  }
+
   public async withInfo({
     withRoot,
     withPackage,
@@ -146,13 +197,30 @@ export class Program {
     } = this;
     const isAtRoot = await this.getIsAtRoot();
 
-    const callRoot = async () => withRoot?.call(this, await this.getRepoInfo());
+    const callRoot = async () => {
+      const repoInfo = await this.getRepoInfo();
+      await this.callWithLogContext(withRoot, 'root', sequential, repoInfo);
+    };
 
-    const callPackage = async (packageDir) =>
-      withPackage?.call(this, await this.getPackageInfo(packageDir));
+    const callPackage = async (packageDir) => {
+      const packageInfo = await this.getPackageInfo(packageDir);
+      await this.callWithLogContext(
+        withPackage,
+        packageInfo.name,
+        sequential,
+        packageInfo,
+      );
+    };
 
-    const callDependency = async (dependencyDir) =>
-      withDependency?.call(this, await this.getPackageInfo(dependencyDir));
+    const callDependency = async (dependencyDir) => {
+      const packageInfo = await this.getPackageInfo(dependencyDir);
+      await this.callWithLogContext(
+        withDependency,
+        `dep ${packageInfo.name}`,
+        sequential,
+        packageInfo,
+      );
+    };
 
     if (isAtRoot || isExecuteAll) {
       await callRoot();
@@ -172,16 +240,8 @@ export class Program {
       );
       await callPackage(packageDir);
     }
-  }
 
-  public async log(titleStr: string, messageStr?: string) {
-    const program = chalk.bold(this.programInfo.program.toUpperCase() + ':');
-    const title = messageStr ? ' ' + titleStr.toUpperCase() : '';
-    const message = ' ' + (messageStr ?? titleStr);
-
-    console.log(
-      chalk.cyan(chalk.inverse(' ' + program + title + ' ') + message),
-    );
+    this.log('info', 'ALL PACKAGES FINISHED');
   }
 
   public async getIsAtRoot(packageDir?: string) {

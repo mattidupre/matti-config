@@ -16,19 +16,22 @@ export default class Build extends Program {
   public async run() {
     const { isWatchMode } = this.programInfo;
 
+    // TODO: Either redo this.withInfo or prevent arrow functions.
+
     await this.withInfo({
-      withPackage: (packageInfo) =>
-        this.buildPackage(packageInfo, isWatchMode).then(() => {
+      withPackage(packageInfo) {
+        return this.buildPackage(packageInfo, isWatchMode).then(() => {
           createBuildCompleteMessage(packageInfo.name);
-        }),
-      withDependency: (packageInfo) => this.buildPackage(packageInfo, false),
+        });
+      },
+      withDependency(packageInfo) {
+        return this.buildPackage(packageInfo, false);
+      },
       sequential: true,
     });
   }
 
-  private async buildPackage(packageInfo: PackageInfo, isWatchMode?: boolean) {
-    this.log(isWatchMode ? 'WATCHING' : 'BUILDING', packageInfo.name);
-
+  async buildPackage(packageInfo: PackageInfo, isWatchMode?: boolean) {
     const { sourceDir, distDir, target } = packageInfo;
 
     // await this.fileManager.rimraf(path.join(distDir, '**/*'));
@@ -49,11 +52,9 @@ export default class Build extends Program {
           : this.buildTsc(packageInfo, false, isWatchMode),
       ].flat(),
     );
-
-    this.log(isWatchMode ? 'WATCH' : 'BUILD', 'complete');
   }
 
-  private async buildTsc(
+  async buildTsc(
     { cacheDir }: PackageInfo,
     emitDeclarationOnly: boolean,
     isWatchMode: boolean,
@@ -65,25 +66,39 @@ export default class Build extends Program {
     ];
     const tscAliasArgs = [...baseArgs];
 
+    const baseOptions = {
+      log: (level, message) => {
+        if (/error TS[0-9]+/.test(message)) {
+          this.log('error', message);
+        } else {
+          this.log(level, message);
+        }
+      },
+    };
+
     // tsc-alias requires a non-watch run of TSC first.
     await this.scriptRunner.run('tsc', {
+      ...baseOptions,
       args: tscArgs,
     });
 
     await this.scriptRunner.run('tsc-alias', {
+      ...baseOptions,
       args: [...tscAliasArgs],
     });
 
     this.scriptRunner.run('tsc', {
+      ...baseOptions,
       args: [...tscArgs, ...(isWatchMode ? [TSC_WATCH_ARGS] : [])],
     });
 
     this.scriptRunner.run('tsc-alias', {
+      ...baseOptions,
       args: [...tscAliasArgs, ...(isWatchMode ? ['--watch'] : [])],
     });
   }
 
-  private async buildVite(
+  async buildVite(
     { cacheDir, packageDir, packageType, packageJsExtension }: PackageInfo,
     isWatchMode: boolean,
   ) {
@@ -126,13 +141,14 @@ export default class Build extends Program {
         pathDotPrefix(path.relative(this.scriptRunner.cwd, viteConfigPath)),
         pathDotPrefix(path.relative(this.scriptRunner.cwd, packageDir)),
       ],
-      onOutput: (message) => {
+      log: (level, message) => {
         if (
           /(?:✓ )?built in [0-9]/.test(message) ||
           /VITE v[0-9]\.[0-9]\.[0-9] +ready in [0-9]+/.test(message)
         ) {
           outerResolve();
         }
+        this.log(level, message);
       },
     });
 

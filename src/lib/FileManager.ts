@@ -28,7 +28,7 @@ export class FileManager {
       cwd: sourceDir,
     });
 
-    await Promise.all(entries.map((filePath) => callback(filePath)));
+    return Promise.all(entries.map((filePath) => callback(filePath)));
   }
 
   public async copyFiles(
@@ -58,7 +58,8 @@ export class FileManager {
     return new Promise((resolve, reject) => {
       rimraf(deletePath, options, (err) => {
         if (err) {
-          return reject(err);
+          reject(err);
+          return;
         }
         resolve(undefined);
       });

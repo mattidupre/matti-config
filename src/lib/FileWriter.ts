@@ -227,10 +227,14 @@ export class FileWriter {
   }
 
   private async writeFile(
-    [filePath, _, buildFileContent, fileOptions]: FileEntry,
+    [filePath, , buildFileContent, fileOptions]: FileEntry,
     filesQueue: FilesQueue,
   ) {
     const { comments } = fileOptions;
+    const contentArr = buildFileContent(filesQueue);
+    if (!contentArr.length || !contentArr.every((line) => line.trim() !== '')) {
+      throw new Error(`Cannot write "${filePath}": file is empty.`);
+    }
     const fileContent = [
       ...(comments
         ? [
@@ -238,7 +242,7 @@ export class FileWriter {
             this.parseComments(comments, filePath).join('\n'),
           ]
         : []),
-      buildFileContent(filesQueue).join('\n'),
+      contentArr.join('\n'),
     ]
       .flat()
       .filter((content) => content?.length > 0)

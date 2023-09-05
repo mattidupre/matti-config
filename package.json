@@ -58,6 +58,7 @@
     "event-iterator": "^2.0.0",
     "exec-sh": "^0.4.0",
     "fast-glob": "^3.2.12",
+    "get-port": "^7.0.0",
     "happy-dom": "^9.20.3",
     "jest-extended": "^4.0.1",
     "jsdom": "^22.1.0",

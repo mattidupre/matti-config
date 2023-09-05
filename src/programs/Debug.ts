@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import path from 'node:path';
 import type { PackageInfo } from '../entities.js';
 import { Program } from '../lib/Program.js';
@@ -16,25 +17,24 @@ export default class Build extends Program {
     // await new Promise((resolve) => {
     //   setTimeout(resolve, 1000);
     // });
-    await this.debugLog('ROOT');
+    this.debugLog('root');
   }
 
-  private async debugPackage(packageInfo: PackageInfo) {
+  private async debugPackage() {
     // await new Promise((resolve) => {
     //   setTimeout(resolve, 1000);
     // });
-    await this.debugLog(packageInfo.name);
+    this.debugLog('package');
   }
 
-  private async debugDependency(packageInfo: PackageInfo) {
+  private async debugDependency() {
     // await new Promise((resolve) => {
     //   setTimeout(resolve, 1000);
     // });
-    await this.debugLog(`>>${packageInfo.name}`);
+    this.debugLog('dependency');
   }
 
   private async debugLog(str: string) {
-    const { rootDir } = await this.getRepoInfo();
-    console.log(`DEBUG ${path.relative(rootDir, process.cwd())}:`, str);
+    this.log('debug', str);
   }
 }

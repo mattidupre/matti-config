@@ -85,12 +85,10 @@ export default class Configure extends Program {
   private async configurePackage(packageInfo: PackageInfo) {
     const {
       environments: unsortedEnvironments,
-      rootDir,
       cacheDir,
       packageDir,
       packageConfig,
       packageJsExtension,
-      packageType,
     } = packageInfo;
 
     this.fileWriter.queueJson(
@@ -174,7 +172,7 @@ export default class Configure extends Program {
           // TODO: When typescript-eslint supports tsconfig project references, get rid of this.
           const tsConfigPaths = filesQueue.files
             .filter(
-              ([_, { useWithESLintParserOptions }]) =>
+              ([, { useWithESLintParserOptions }]) =>
                 useWithESLintParserOptions,
             )
             .map(([filePath]) => filePath);

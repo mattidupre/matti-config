@@ -23,6 +23,8 @@ module.exports = {
       },
       parser: '@typescript-eslint/parser',
       rules: {
+        'arrow-body-style': 'off',
+        'no-nested-ternary': 'off',
         'prefer-template': 'off',
         'import/prefer-default-export': 'off',
         'class-methods-use-this': 'off',

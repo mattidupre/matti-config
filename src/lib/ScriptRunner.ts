@@ -1,18 +1,30 @@
 import terminate from 'terminate';
 import { spawn } from 'node:child_process';
 
-type Options = {
+type ConstructorOptions = {
+  cwd: string;
+};
+
+type RunOptions = {
   args?: Array<string>;
   cwd?: string;
-  onOutput?: (message: string) => void;
+  log?: (level: 'info' | 'error', message: string) => void;
   forceColor?: boolean;
   skipNpx?: boolean;
 };
 
-export class ScriptRunner {
-  public readonly cwd: string;
+const defaultLogger: RunOptions['log'] = (level, message) => {
+  if (level === 'error') {
+    process.stderr.write(message);
+  } else {
+    process.stdout.write(message);
+  }
+};
 
-  constructor(cwd: string) {
+export class ScriptRunner {
+  public cwd: string;
+
+  constructor({ cwd }: ConstructorOptions) {
     this.cwd = cwd;
 
     process.on('exit', this.terminate);
@@ -22,7 +34,13 @@ export class ScriptRunner {
 
   async run(
     script: string,
-    { args = [], cwd, onOutput, forceColor, skipNpx }: Options = {},
+    {
+      args = [],
+      cwd,
+      log = defaultLogger,
+      forceColor,
+      skipNpx,
+    }: RunOptions = {},
   ) {
     const [scriptBase, ...argStrings] = [
       ...(skipNpx ? [script] : ['npx', script]),
@@ -34,10 +52,11 @@ export class ScriptRunner {
       let isResolved = false;
 
       const handleError = (err: Error) => {
-        console.error(err);
         if (!isResolved) {
           isResolved = true;
           reject(err);
+        } else {
+          throw err;
         }
       };
 
@@ -48,10 +67,6 @@ export class ScriptRunner {
         }
       };
 
-      const handleOutput = (data: Buffer) => {
-        onOutput?.(data.toString());
-      };
-
       try {
         const child = spawn(scriptBase, argStrings, {
           shell: true,
@@ -60,14 +75,8 @@ export class ScriptRunner {
 
         child.on('error', handleError);
         child.on('exit', handleExit);
-        child.stdout.on('data', (data) => {
-          process.stdout.write(data);
-          handleOutput(data);
-        });
-        child.stderr.on('data', (data) => {
-          process.stderr.write(data);
-          handleOutput(data);
-        });
+        child.stdout.on('data', (data) => log('info', data.toString()));
+        child.stderr.on('data', (data) => log('error', data.toString()));
       } catch (err) {
         handleError(err);
       }
