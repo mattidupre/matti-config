@@ -18,13 +18,21 @@ const PACKAGE_JSON_OMIT = ['exports', 'typesVersions', 'type'] as const;
 export const packageConfig = async (
   packageInfo: PackageInfo,
 ): Promise<PackageJson> => {
-  const { sourceDir, packageJson, packageType, target } = packageInfo;
+  const {
+    sourceDir,
+    packageJson,
+    packageType,
+    target,
+    configRootDir,
+    packageDir,
+  } = packageInfo;
   const {
     name,
     version,
     bin,
     main,
     scripts: originalScripts,
+    peerDependencies: originalPeerDependencies,
     ...packageJsonRest
     // Note: Omit<PackageJson, ...> returns every value as JsonValue.
   } = _.omit(packageJson, ['exports', 'typesVersions', 'type']) as PackageJson;
@@ -66,6 +74,11 @@ export const packageConfig = async (
       : {}),
   };
 
+  const peerDependencies = {
+    ...originalPeerDependencies,
+    'matti-config': `file:${path.relative(packageDir, configRootDir)}`,
+  };
+
   const scripts = {
     ...originalScripts,
     m: 'npx matti-config',
@@ -81,6 +94,7 @@ export const packageConfig = async (
     types: './dist/index.d.ts',
     exports,
     typesVersions,
+    peerDependencies,
     scripts,
     ...packageJsonRest,
   };

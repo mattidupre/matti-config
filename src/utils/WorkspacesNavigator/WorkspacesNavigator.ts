@@ -282,8 +282,15 @@ export class WorkspacesNavigator {
   public async getWorkspaceDir(
     workspaceName: string,
   ): Promise<undefined | string> {
+    const rootDir = await this.getRootDir();
+
     if (workspaceName === 'root') {
-      return this.getRootDir();
+      return rootDir;
+    }
+
+    const rootPackageJson = await WorkspacesNavigator.readPackageJson(rootDir);
+    if (rootPackageJson?.name === workspaceName) {
+      return rootDir;
     }
 
     for await (const dir of await this.getWorkspaceDirsIterator()) {
@@ -325,13 +332,14 @@ export class WorkspacesNavigator {
 
   @Memoize()
   private async getInternalDependencies(packageJson: PackageJson) {
-    const { dependencies, devDependencies } = packageJson;
+    const { dependencies, devDependencies, peerDependencies } = packageJson;
 
     return (
       await Promise.all(
         Object.keys({
           ...(dependencies ?? {}),
           ...(devDependencies ?? {}),
+          ...(peerDependencies ?? {}),
         }).map(async (dependencyName) => [
           dependencyName,
           await this.getWorkspaceDir(dependencyName),

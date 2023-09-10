@@ -1,7 +1,6 @@
 import path from 'node:path';
 import fg from 'fast-glob';
 import { defineConfig } from 'vite';
-import dts from 'vite-plugin-dts';
 import react from '@vitejs/plugin-react';
 import { vanillaExtractPlugin } from '@vanilla-extract/vite-plugin';
 import ViteYaml from '@modyfi/vite-plugin-yaml';
@@ -45,7 +44,7 @@ export default async ({
     ),
     ...(isLibrary
       ? {
-          external: ['react'],
+          external: ['react', 'react-dom'],
           output: [
             // {
             //   format: 'commonjs',
@@ -83,6 +82,7 @@ export default async ({
       ...(isLibrary
         ? {
             lib: {
+              // Single entry while vanillaExtractPlugin does not support multiple entries.
               entry: `./${SOURCE_DIRNAME}/index.ts`,
               fileName: 'index',
               formats: ['es', 'cjs'],
@@ -109,7 +109,7 @@ export default async ({
       ...(isPackageFrontend
         ? [
             vanillaExtractPlugin({
-              // TODO: Figure out how to handle multiple entries.
+              // TODO: Figure out how to handle multiple js entries.
               identifiers: 'debug',
               esbuildOptions: {
                 // Vanilla Extract doesn't seem to like tsconfig project references.

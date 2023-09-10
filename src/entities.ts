@@ -5,6 +5,8 @@ import type { PackageJson } from 'type-fest';
 
 import { z } from 'zod';
 
+export { type PackageJson };
+
 export const CONFIG_APP_NAME = 'matti-config';
 
 export const CONFIG_APP_ROOT_DIR = path.resolve(
@@ -88,39 +90,39 @@ export const PROGRAMS: Record<
   },
   Configure: {
     description: 'Create top-level config files.',
-    acceptedOptions: ['root'],
+    acceptedOptions: ['all', 'root'],
   },
   Link: {
     description: 'Link matching repos from parent folder.',
-    acceptedOptions: ['root'],
+    acceptedOptions: ['all', 'root'],
   },
   Build: {
     description: 'Build the package.',
-    acceptedOptions: ['watch', 'watchProduction'],
+    acceptedOptions: ['all', 'watch', 'watchProduction'],
   },
   Storybook: {
     description: 'Build storybook.',
-    acceptedOptions: ['watch'],
+    acceptedOptions: ['all', 'watch'],
   },
   Test: {
     description: 'Test the package.',
-    acceptedOptions: ['watch'],
+    acceptedOptions: ['all', 'watch'],
   },
   Lint: {
     description: 'Lint the package.',
-    acceptedOptions: ['root'],
+    acceptedOptions: ['all', 'root'],
   },
   TypeCheck: {
     description: 'Check all package types.',
-    acceptedOptions: [],
+    acceptedOptions: ['all'],
   },
   Clean: {
     description: 'Remove config files.',
-    acceptedOptions: ['root', 'hard'],
+    acceptedOptions: ['all', 'root', 'hard'],
   },
   Debug: {
     description: 'Debug.',
-    acceptedOptions: ['root', 'watch'],
+    acceptedOptions: ['all', 'root', 'watch'],
   },
 } as const;
 

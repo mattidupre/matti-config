@@ -6,18 +6,40 @@ import { CONFIG_APP_NAME } from '../entities.js';
 import { Memoize } from 'typescript-memoize';
 import { WorkspacesNavigator } from '../utils/WorkspacesNavigator/index.js';
 import fg from 'fast-glob';
-import { type PackageInfo } from '../entities.js';
+import {
+  type PackageInfo,
+  type PackageJson,
+  type RepoInfo,
+} from '../entities.js';
 import { pathDotPrefix } from '../utils/pathDotPrefix.js';
 
 export default class Link extends Program {
   public async run() {
     await this.withInfo({
-      withPackage: this.buildPackage,
+      withRoot: this.linkRoot,
+      withPackage: this.linkPackage,
     });
   }
 
-  private async buildPackage(packageInfo: PackageInfo) {
-    const { name, packageDir, packageJson } = packageInfo;
+  async linkRoot(repoInfo: RepoInfo) {
+    const { rootDir, packageJson } = repoInfo;
+    return this.buildPackage({ packageDir: rootDir, packageJson });
+  }
+
+  async linkPackage(packageInfo: PackageInfo) {
+    const { packageDir, packageJson } = packageInfo;
+    return this.buildPackage({ packageDir, packageJson });
+  }
+
+  private externalConfigDir: false | string = undefined;
+
+  private async buildPackage({
+    packageDir,
+    packageJson,
+  }: {
+    packageDir: string;
+    packageJson: PackageJson;
+  }) {
     const packageDependencies = [
       ...Object.keys(packageJson.dependencies ?? {}),
       ...Object.keys(packageJson.peerDependencies ?? {}),
@@ -25,17 +47,29 @@ export default class Link extends Program {
 
     const externalPackageDirs = (
       await Promise.all(
-        packageDependencies.map((packageName) =>
-          this.getExternalPackageDir(packageName),
-        ),
+        packageDependencies.map((packageName) => {
+          if (packageName === CONFIG_APP_NAME) {
+            return undefined;
+          }
+          return this.getExternalPackageDir(packageName);
+        }),
       )
     )
       .filter((v) => v !== undefined)
       .map((v) => pathDotPrefix(path.relative(packageDir, v)));
 
+    // Always link this package, even if it is not in dependencies.
+    this.externalConfigDir =
+      this.externalConfigDir ??
+      ((await this.getExternalPackageDir(CONFIG_APP_NAME)) || false);
+
+    if (this.externalConfigDir) {
+      externalPackageDirs.unshift(this.externalConfigDir);
+    }
+
     await Promise.all(
       externalPackageDirs.map((externalPackageDir) => {
-        console.log(`${name}: linking ${externalPackageDir}`);
+        this.log('info', `linking ${externalPackageDir}`);
         return this.scriptRunner.run('pnpm', {
           args: ['link', externalPackageDir],
           cwd: packageDir,
@@ -44,11 +78,12 @@ export default class Link extends Program {
     );
   }
 
+  /**
+   * For a given package name, iterates through all navigators in parent dir
+   * and returns the matching directory.
+   */
   @Memoize()
   private async getExternalPackageDir(packageName: string) {
-    if (packageName === CONFIG_APP_NAME) {
-      return undefined;
-    }
     let externalPackageDir: string;
     await Promise.all(
       (
@@ -72,6 +107,10 @@ export default class Link extends Program {
     Array<InstanceType<typeof WorkspacesNavigator>>
   >;
 
+  /**
+   * Returns a WorkspacesNavigator instance for each package in the parent dir.
+   * _Only runs once._
+   */
   private getExternalNavigators() {
     if (!this.externalNavigators) {
       this.externalNavigators = Promise.resolve().then(async () => {
